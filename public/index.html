@@ -1831,6 +1831,23 @@ function renderCharts(platformData) {
 }
 
 load();
+
+// Check for OAuth success in URL and reload platforms
+const urlParams = new URLSearchParams(window.location.search);
+if (urlParams.get('success')) {
+  const platform = urlParams.get('success').replace('_connected', '');
+  
+  // Clean up URL first
+  window.history.replaceState({}, document.title, window.location.pathname);
+  
+  // Show success notification
+  setTimeout(() => {
+    notifications.show('Successfully connected ' + platform + '!', 'success', '✅ Connected');
+  }, 100);
+  
+  // Reload platforms to show connected status
+  setTimeout(load, 800);
+}
 </script>
 </body>
 </html>

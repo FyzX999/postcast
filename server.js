@@ -1,18 +1,7 @@
 require('dotenv').config();
-const express = require('express'), multer = require('multer'), fs = require('fs'),
-  path = require('path'), crypto = require('crypto');
-
-// Optional ffmpeg for thumbnail generation (gracefully handle if not installed)
-let ffmpeg;
-try {
-  ffmpeg = require('fluent-ffmpeg');
-  const ffmpegPath = require('ffmpeg-static');
-  const ffprobePath = require('ffprobe-static').path;
-  if (ffmpegPath) ffmpeg.setFfmpegPath(ffmpegPath);
-  if (ffprobePath) ffmpeg.setFfprobePath(ffprobePath);
-} catch (e) {
-  console.warn('ffmpeg not available - thumbnail generation disabled');
-}
+const express = require('express');
+const path = require('path');
+const { createClient } = require('@supabase/supabase-js');
 
 const app = express();
 
@@ -21,145 +10,265 @@ const BASE = process.env.PUBLIC_BASE_URL
   || (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : null)
   || 'http://localhost:3000';
 
-const DATA = path.join(__dirname, 'data'), UP = path.join(__dirname, 'uploads');
-[DATA, UP].forEach(d => fs.mkdirSync(d, { recursive: true }));
-const read = (f, d) => { try { return JSON.parse(fs.readFileSync(path.join(DATA, f))); } catch { return d; } };
-const write = (f, v) => fs.writeFileSync(path.join(DATA, f), JSON.stringify(v, null, 2));
+// Initialize Supabase client (optional - gracefully handle if not configured)
+let supabase = null;
+if (process.env.SUPABASE_URL && process.env.SUPABASE_KEY) {
+  supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_KEY);
+}
 
-// Skip password auth entirely for now (causing issues on Vercel)
+// Simple auth credentials from environment variables
+const AUTH_USERNAME = process.env.AUTH_USERNAME || 'admin';
+const AUTH_PASSWORD = process.env.AUTH_PASSWORD || 'password';
+
+// Authentication middleware
+app.use((req, res, next) => {
+  // Skip auth for static files and health check
+  if (req.path === '/api/health' || req.path.startsWith('/uploads/') || req.path.match(/\.(js|css|png|jpg|gif|svg|ico|html|woff|woff2|ttf)$/i)) {
+    return next();
+  }
+  
+  // Check Basic Auth
+  const auth = req.headers.authorization || '';
+  const [scheme, credentials] = auth.split(' ');
+  
+  if (scheme === 'Basic' && credentials) {
+    try {
+      const decoded = Buffer.from(credentials, 'base64').toString();
+      const [username, password] = decoded.split(':');
+      
+      if (username === AUTH_USERNAME && password === AUTH_PASSWORD) {
+        return next();
+      }
+    } catch (e) {}
+  }
+  
+  // Require login
+  res.set('WWW-Authenticate', 'Basic realm="Postcast - Login Required"');
+  res.status(401).send('Authentication required');
+});
+
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
-app.use('/uploads', express.static(UP));
 
-// ---------- Platforms ----------
-const P = {
-  youtube: { name: 'YouTube Shorts', auth: 'https://accounts.google.com/o/oauth2/v2/auth', token: 'https://oauth2.googleapis.com/token',
-    id: 'GOOGLE_CLIENT_ID', secret: 'GOOGLE_CLIENT_SECRET', idField: 'client_id',
-    scope: 'https://www.googleapis.com/auth/youtube.upload https://www.googleapis.com/auth/youtube.readonly', extra: { access_type: 'offline', prompt: 'consent' } },
-  tiktok: { name: 'TikTok', auth: 'https://www.tiktok.com/v2/auth/authorize/', token: 'https://open.tiktokapis.com/v2/oauth/token/',
-    id: 'TIKTOK_CLIENT_KEY', secret: 'TIKTOK_CLIENT_SECRET', idField: 'client_key', scope: 'user.info.basic,user.info.stats,video.publish,video.list' },
-  instagram: { name: 'Instagram', auth: 'https://www.facebook.com/v21.0/dialog/oauth', token: 'https://graph.facebook.com/v21.0/oauth/access_token',
-    id: 'META_APP_ID', secret: 'META_APP_SECRET', idField: 'client_id',
-    scope: 'instagram_basic,instagram_content_publish,pages_show_list,pages_read_engagement,instagram_manage_insights' },
-};
+// Fallback data
+const fallbackTitles = ['🔥 Amazing Content', '⚡ Must Watch', '✨ You Won\'t Believe This', '🎯 Viral Video', '💡 Game Changer'];
+const fallbackHashtags = ['#viral', '#trending', '#foryou', '#shorts', '#reels', '#content', '#creator'];
 
+// Platform list
 app.get('/api/platforms', (req, res) => {
-  const tokens = read('tokens.json', {});
-  const list = Object.entries(P).map(([key, p]) => ({
-    key, name: p.name, configured: !!process.env[p.id], connected: !!tokens[key] }));
-  list.push({ key: 'snapchat', name: 'Snapchat', manual: true });
-  res.json(list);
+  res.json([
+    { key: 'youtube', name: 'YouTube Shorts', configured: false, connected: false },
+    { key: 'tiktok', name: 'TikTok', configured: false, connected: false },
+    { key: 'instagram', name: 'Instagram', configured: false, connected: false },
+    { key: 'snapchat', name: 'Snapchat', manual: true, configured: false, connected: false }
+  ]);
 });
 
-const states = new Map();
-app.get('/auth/:p', (req, res) => {
-  const p = P[req.params.p];
-  if (!p || !process.env[p.id]) return res.status(400).send('Add this platform\'s keys to .env first.');
-  const state = crypto.randomUUID(); states.set(state, req.params.p);
-  const q = new URLSearchParams({ [p.idField]: process.env[p.id], redirect_uri: `${BASE}/auth/${req.params.p}/callback`,
-    response_type: 'code', scope: p.scope, state, ...(p.extra || {}) });
-  res.redirect(`${p.auth}?${q}`);
+// Settings (using Supabase if available)
+app.get('/api/settings', async (req, res) => {
+  if (supabase) {
+    try {
+      const { data, error } = await supabase
+        .from('settings')
+        .select('*')
+        .single();
+      
+      if (!error && data) {
+        return res.json(data);
+      }
+    } catch (e) {}
+  }
+  res.json({ defaultDescription: '', style: '' });
 });
 
-app.get('/auth/:p/callback', async (req, res) => {
-  const key = req.params.p, p = P[key];
-  if (!p || states.get(req.query.state) !== key) return res.status(400).send('Invalid login state.');
-  states.delete(req.query.state);
-  try {
-    const r = await fetch(p.token, { method: 'POST', headers: { 'content-type': 'application/x-www-form-urlencoded' },
-      body: new URLSearchParams({ [p.idField]: process.env[p.id], client_secret: process.env[p.secret], code: req.query.code,
-        grant_type: 'authorization_code', redirect_uri: `${BASE}/auth/${key}/callback` }) });
-    const t = await r.json();
-    if (!r.ok || t.error) throw new Error(t.error_description || t.error?.message || 'Token exchange failed');
-    let tok = { ...t, saved_at: Date.now() };
-    if (key === 'instagram') { // swap the short-lived token for a ~60 day one
-      const x = await (await fetch(`${p.token}?` + new URLSearchParams({ grant_type: 'fb_exchange_token', client_id: process.env[p.id],
-        client_secret: process.env[p.secret], fb_exchange_token: t.access_token }))).json();
-      if (x.access_token) tok = { ...x, saved_at: Date.now() };
-    }
-    const tokens = read('tokens.json', {}); tokens[key] = tok; write('tokens.json', tokens);
-    res.redirect('/?connected=' + key);
-  } catch (e) { res.status(500).send('Connection failed: ' + e.message); }
-});
-
-app.post('/api/disconnect/:p', (req, res) => {
-  const tokens = read('tokens.json', {}); delete tokens[req.params.p]; write('tokens.json', tokens); res.json({ ok: true });
-});
-
-// ---------- Settings ----------
-app.get('/api/settings', (req, res) => res.json(read('settings.json', { defaultDescription: '', style: '' })));
-app.post('/api/settings', (req, res) => {
-  const { defaultDescription = '', style = '' } = req.body; 
-  write('settings.json', { defaultDescription, style }); 
+app.post('/api/settings', async (req, res) => {
+  if (supabase) {
+    try {
+      const { defaultDescription = '', style = '' } = req.body;
+      await supabase
+        .from('settings')
+        .upsert({ id: 1, defaultDescription, style });
+    } catch (e) {}
+  }
   res.json({ ok: true });
 });
 
-// ---------- AI (with fallbacks) ----------
-const fallbackTitles = ['🔥 Amazing Content', '⚡ Must Watch', '✨ You Won\'t Believe This'];
-const fallbackHashtags = ['#viral', '#trending', '#foryou', '#shorts', '#content'];
-
+// Generate titles with Gemini
 app.post('/api/generate', async (req, res) => {
   try {
-    const { topic } = req.body;
-    if (!process.env.ANTHROPIC_API_KEY) {
-      return res.json({ title: fallbackTitles[0] + ' - ' + topic, description: 'Check this out!' });
+    const { topic, count = 1 } = req.body;
+    
+    // If no Gemini API key, return fallback
+    if (!process.env.GEMINI_API_KEY) {
+      const titles = [];
+      for (let i = 0; i < count; i++) {
+        titles.push(fallbackTitles[i % fallbackTitles.length] + ' - ' + (topic || 'Video'));
+      }
+      return res.json({ titles });
     }
     
-    const r = await fetch('https://api.anthropic.com/v1/messages', { method: 'POST',
-      headers: { 'content-type': 'application/json', 'x-api-key': process.env.ANTHROPIC_API_KEY, 'anthropic-version': '2023-06-01' },
-      body: JSON.stringify({ model: 'claude-sonnet-4-6', max_tokens: 300,
-        system: 'Reply with only JSON: {"title": string under 80 chars, "description": string under 300 chars}',
-        messages: [{ role: 'user', content: `Generate title and description for video about: ${topic}` }] }) });
+    // Call Gemini API
+    const prompt = count > 1
+      ? `Generate ${count} different catchy short-form video titles for: ${topic}. Reply with JSON: {"titles": ["title1", "title2"]}`
+      : `Generate 1 catchy short-form video title for: ${topic}. Reply with JSON: {"titles": ["title"]}`;
+    
+    const r = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:generateContent?key=${process.env.GEMINI_API_KEY}`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({
+        contents: [{
+          parts: [{ text: prompt }]
+        }]
+      })
+    });
+    
     const d = await r.json();
-    if (!r.ok) return res.json({ title: fallbackTitles[0], description: topic });
-    res.json(JSON.parse(d.content[0].text.replace(/```json|```/g, '').trim()));
-  } catch (e) { res.json({ title: fallbackTitles[0], description: req.body.topic || '' }); }
+    if (!r.ok || !d.candidates) {
+      const titles = [];
+      for (let i = 0; i < count; i++) {
+        titles.push(fallbackTitles[i % fallbackTitles.length]);
+      }
+      return res.json({ titles });
+    }
+    
+    const text = d.candidates[0]?.content?.parts[0]?.text || '';
+    const json = JSON.parse(text.replace(/```json|```/g, '').trim());
+    res.json(json);
+  } catch (e) {
+    const titles = [];
+    for (let i = 0; i < (req.body.count || 1); i++) {
+      titles.push(fallbackTitles[i % fallbackTitles.length]);
+    }
+    res.json({ titles });
+  }
 });
 
+// Suggest hashtags with Gemini
 app.post('/api/suggest-hashtags', async (req, res) => {
-  res.json({ hashtags: fallbackHashtags });
+  try {
+    const { topic, title, description } = req.body;
+    
+    if (!process.env.GEMINI_API_KEY) {
+      return res.json({ hashtags: fallbackHashtags.slice(0, 5) });
+    }
+    
+    const r = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:generateContent?key=${process.env.GEMINI_API_KEY}`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({
+        contents: [{
+          parts: [{
+            text: `Generate 5-10 trending hashtags for a video about: ${topic}. Title: ${title}. Description: ${description}. Reply with JSON: {"hashtags": ["#tag1", "#tag2"]}`
+          }]
+        }]
+      })
+    });
+    
+    const d = await r.json();
+    if (!r.ok || !d.candidates) {
+      return res.json({ hashtags: fallbackHashtags.slice(0, 5) });
+    }
+    
+    const text = d.candidates[0]?.content?.parts[0]?.text || '';
+    const json = JSON.parse(text.replace(/```json|```/g, '').trim());
+    res.json(json);
+  } catch (e) {
+    res.json({ hashtags: fallbackHashtags.slice(0, 5) });
+  }
 });
 
-app.post('/api/optimize-content', async (req, res) => {
-  res.json({ optimized_description: req.body.description || '', tips: ['Keep it short', 'Use trending sounds'] });
+// Optimize content
+app.post('/api/optimize-content', (req, res) => {
+  res.json({ 
+    optimized_description: (req.body.description || '') + '\n\n#ContentCreator #Viral', 
+    tips: ['Keep it short and engaging', 'Use trending sounds', 'Post at peak hours']
+  });
 });
 
-// ---------- Upload ----------
-const upload = multer({ storage: multer.diskStorage({ destination: UP,
-  filename: (req, f, cb) => cb(null, crypto.randomUUID() + path.extname(f.originalname).toLowerCase()) }),
-  limits: { fileSize: 500 * 1024 * 1024 } });
-  
-app.post('/api/upload', upload.single('video'), (req, res) =>
-  req.file ? res.json({ file: req.file.filename, url: `${BASE}/uploads/${req.file.filename}` }) : res.status(400).json({ error: 'No video' }));
+// Upload (would need Supabase Storage)
+app.post('/api/upload', (req, res) => {
+  res.status(501).json({ error: 'File uploads require Supabase Storage configuration' });
+});
 
-// ---------- Post History ----------
-app.get('/api/posts', (req, res) => res.json(read('history.json', [])));
-app.post('/api/posts/:id/delete', (req, res) => {
-  const h = read('history.json', []);
-  write('history.json', h.filter(p => p.id !== req.params.id));
+// Post history (using Supabase if available)
+app.get('/api/posts', async (req, res) => {
+  if (supabase) {
+    try {
+      const { data, error } = await supabase
+        .from('posts')
+        .select('*')
+        .order('created_at', { ascending: false })
+        .limit(100);
+      
+      if (!error && data) {
+        return res.json(data);
+      }
+    } catch (e) {}
+  }
+  res.json([]);
+});
+
+app.post('/api/posts/:id/delete', async (req, res) => {
+  if (supabase) {
+    try {
+      await supabase
+        .from('posts')
+        .delete()
+        .eq('id', req.params.id);
+    } catch (e) {}
+  }
   res.json({ ok: true });
 });
 
 app.post('/api/publish', async (req, res) => {
   const { file, title, description, platforms = [] } = req.body;
-  const history = read('history.json', []);
-  history.unshift({
-    id: crypto.randomUUID(),
-    title, description, platforms,
-    status: 'published',
-    created_at: new Date().toISOString(),
-    file
-  });
-  write('history.json', history.slice(0, 100));
-  res.json({ message: 'Saved to history' });
+  
+  if (supabase) {
+    try {
+      await supabase
+        .from('posts')
+        .insert({
+          title,
+          description,
+          platforms,
+          status: 'published',
+          created_at: new Date().toISOString(),
+          file
+        });
+    } catch (e) {
+      console.error('Supabase insert error:', e);
+    }
+  }
+  
+  res.json({ ok: true, message: 'Post saved' });
 });
 
-app.get('/api/analytics', (req, res) => res.json({}));
+app.get('/api/analytics', (req, res) => {
+  res.json({});
+});
 
-// Export the app (for Vercel)
+app.post('/api/disconnect/:p', (req, res) => {
+  res.json({ ok: true });
+});
+
+app.get('/api/health', (req, res) => {
+  res.json({ 
+    ok: true, 
+    base: BASE,
+    supabase: !!supabase,
+    gemini: !!process.env.GEMINI_API_KEY
+  });
+});
+
+// Catch-all for SPA
+app.get('*', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public/index.html'));
+});
+
+// Export for Vercel
 module.exports = app;
 
-// Only start server if running directly
+// Start server if running locally
 if (require.main === module) {
-  app.listen(process.env.PORT || 3000, () => console.log('✅ Postcast running on ' + BASE));
+  app.listen(process.env.PORT || 3000, () => console.log('✅ Postcast on ' + BASE));
 }

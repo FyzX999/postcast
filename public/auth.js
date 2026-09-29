@@ -1,10 +1,15 @@
 // Auth check and token management
 (function() {
+  // Skip auth check if we're on the login page
+  if (window.location.pathname === '/login' || window.location.pathname === '/login.html') {
+    return;
+  }
+
   const token = localStorage.getItem('auth_token');
   
   // If no token, redirect to login
   if (!token) {
-    window.location.href = '/login.html';
+    window.location.href = '/login';
     return;
   }
   
@@ -18,20 +23,27 @@
   .then(data => {
     if (!data.valid) {
       localStorage.removeItem('auth_token');
-      window.location.href = '/login.html';
+      window.location.href = '/login';
     }
   })
   .catch(() => {
     localStorage.removeItem('auth_token');
-    window.location.href = '/login.html';
+    window.location.href = '/login';
   });
   
   // Add auth header to all fetch requests
   const originalFetch = window.fetch;
   window.fetch = function(...args) {
+    const token = localStorage.getItem('auth_token');
+    if (!token) {
+      return originalFetch.apply(this, args);
+    }
+    
     if (args[1]) {
       args[1].headers = args[1].headers || {};
-      args[1].headers['Authorization'] = 'Bearer ' + token;
+      if (!args[1].headers['Authorization']) {
+        args[1].headers['Authorization'] = 'Bearer ' + token;
+      }
     } else {
       args[1] = {
         headers: {
@@ -53,11 +65,11 @@
         }
       }).finally(() => {
         localStorage.removeItem('auth_token');
-        window.location.href = '/login.html';
+        window.location.href = '/login';
       });
     } else {
       localStorage.removeItem('auth_token');
-      window.location.href = '/login.html';
+      window.location.href = '/login';
     }
   };
   

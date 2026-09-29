@@ -284,11 +284,14 @@
           window.location.href = '/';
         } else {
           showError(data.message || 'Invalid username or password');
+          // Reset button state on error
+          loginBtn.disabled = false;
+          btnText.style.display = 'inline';
+          btnLoading.style.display = 'none';
         }
       } catch (error) {
         showError('Connection error. Please try again.');
-      } finally {
-        // Reset button state
+        // Reset button state on error
         loginBtn.disabled = false;
         btnText.style.display = 'inline';
         btnLoading.style.display = 'none';
@@ -301,10 +304,11 @@
     }
 
     // Check if already logged in
-    if (localStorage.getItem('auth_token')) {
+    const existingToken = localStorage.getItem('auth_token');
+    if (existingToken) {
       fetch('/api/verify', {
         headers: {
-          'Authorization': 'Bearer ' + localStorage.getItem('auth_token')
+          'Authorization': 'Bearer ' + existingToken
         }
       })
       .then(r => r.json())
@@ -313,7 +317,10 @@
           window.location.href = '/';
         }
       })
-      .catch(() => {});
+      .catch(() => {
+        // Invalid token, stay on login page
+        localStorage.removeItem('auth_token');
+      });
     }
   </script>
 </body>

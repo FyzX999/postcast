@@ -69,7 +69,7 @@ app.post('/api/logout', (req, res) => {
 // Authentication middleware
 app.use((req, res, next) => {
   // Skip auth for login page and login endpoint
-  if (req.path === '/login.html' || req.path === '/api/login' || req.path === '/api/health') {
+  if (req.path === '/login' || req.path === '/login.html' || req.path === '/api/login' || req.path === '/api/verify' || req.path === '/api/health') {
     return next();
   }
   
@@ -89,7 +89,7 @@ app.use((req, res, next) => {
   
   // Redirect to login page for HTML requests
   if (req.path === '/' || req.path === '/index.html') {
-    return res.redirect('/login.html');
+    return res.redirect('/login');
   }
   
   // Return 401 for API requests
@@ -97,6 +97,11 @@ app.use((req, res, next) => {
 });
 
 app.use(express.static(path.join(__dirname, 'public')));
+
+// Clean URL routing (remove .html extensions)
+app.get('/login', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public/login.html'));
+});
 
 // Fallback data
 const fallbackTitles = ['🔥 Amazing Content', '⚡ Must Watch', '✨ You Won\'t Believe This', '🎯 Viral Video', '💡 Game Changer'];

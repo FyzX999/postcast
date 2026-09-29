@@ -166,24 +166,41 @@ app.post('/api/generate', async (req, res) => {
   }
 });
 
+const fallbackHashtags = ['#viral', '#trending', '#foryou', '#viralvideo', '#shorts', '#reels', '#tiktok', '#youtube', '#content', '#creator'];
+
 app.post('/api/suggest-hashtags', async (req, res) => {
   try {
     const { topic, title, description } = req.body;
 
-    const r = await fetch('https://api.anthropic.com/v1/messages', {
+    // If no API key, return fallback hashtags
+    if (!process.env.GEMINI_API_KEY) {
+      return res.json({ hashtags: fallbackHashtags.slice(0, 5) });
+    }
+
+    const r = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${process.env.GEMINI_API_KEY}`, {
       method: 'POST',
-      headers: {
-        'content-type': 'application/json',
-        'x-api-key': process.env.ANTHROPIC_API_KEY,
-        'anthropic-version': '2023-06-01'
-      },
+      headers: { 'content-type': 'application/json' },
       body: JSON.stringify({
-        model: process.env.AI_MODEL || 'claude-sonnet-4-6',
-        max_tokens: 300,
-        system: 'You generate trending hashtags. Reply with only JSON: {"hashtags": ["#tag1", "#tag2"]}',
-        messages: [{ role: 'user', content: `Topic: ${topic}\nTitle: ${title}\nDescription: ${description}\n\nGenerate trending hashtags.` }]
+        contents: [{
+          parts: [{
+            text: `System: You generate trending hashtags. Always reply with valid JSON only.\n\nUser: Topic: ${topic}\nTitle: ${title}\nDescription: ${description}\n\nGenerate 5-10 trending hashtags. Reply with JSON: {"hashtags": ["#tag1", "#tag2"]}`
+          }]
+        }]
       })
     });
+
+    const d = await r.json();
+    if (!r.ok) {
+      return res.json({ hashtags: fallbackHashtags.slice(0, 5) });
+    }
+
+    const text = d.candidates?.[0]?.content?.parts?.[0]?.text || '';
+    const jsonStr = text.replace(/```json|```/g, '').trim();
+    res.json(JSON.parse(jsonStr));
+  } catch (e) {
+    res.json({ hashtags: fallbackHashtags.slice(0, 5) });
+  }
+});
 
     const d = await r.json();
     if (!r.ok) throw new Error(d.error?.message || 'AI request failed');

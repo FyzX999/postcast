@@ -20,87 +20,100 @@ if (process.env.SUPABASE_URL && process.env.SUPABASE_KEY) {
 // Simple auth credentials from environment variables
 const AUTH_USERNAME = process.env.AUTH_USERNAME || 'admin';
 const AUTH_PASSWORD = process.env.AUTH_PASSWORD || 'password';
+const SECRET_KEY = process.env.SECRET_KEY || 'your-secret-key-change-in-production';
 
-// In-memory token store (in production, use Redis or database)
-const tokens = new Map();
+// Simple token encode/decode (stateless - works in serverless)
+function encodeToken(username) {
+  const payload = JSON.stringify({ username, exp: Date.now() + 86400000 }); // 24h expiry
+  const signature = crypto.createHmac('sha256', SECRET_KEY).update(payload).digest('hex');
+  return Buffer.from(payload).toString('base64') + '.' + signature;
+}
 
-// Generate a secure token
-function generateToken() {
-  return crypto.randomBytes(32).toString('hex');
+function decodeToken(token) {
+  try {
+    const [payloadB64, signature] = token.split('.');
+    const payload = Buffer.from(payloadB64, 'base64').toString();
+    const expectedSig = crypto.createHmac('sha256', SECRET_KEY).update(payload).digest('hex');
+    
+    if (signature !== expectedSig) return null;
+    
+    const data = JSON.parse(payload);
+    if (data.exp < Date.now()) return null; // expired
+    
+    return data;
+  } catch (e) {
+    return null;
+  }
 }
 
 app.use(express.json());
+
+// Public routes - NO AUTH
+app.get('/login', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public/login.html'));
+});
 
 // Login endpoint
 app.post('/api/login', (req, res) => {
   const { username, password } = req.body;
   
   if (username === AUTH_USERNAME && password === AUTH_PASSWORD) {
-    const token = generateToken();
-    tokens.set(token, { username, createdAt: Date.now() });
-    
-    res.json({ success: true, token });
+    const token = encodeToken(username);
+    res.json({ success: true, token, username });
   } else {
     res.status(401).json({ success: false, message: 'Invalid username or password' });
   }
 });
 
-// Verify token endpoint
+// Verify token endpoint - NO AUTH REQUIRED
 app.get('/api/verify', (req, res) => {
   const auth = req.headers.authorization || '';
   const token = auth.replace('Bearer ', '');
   
-  if (tokens.has(token)) {
-    res.json({ valid: true });
+  const user = decodeToken(token);
+  if (user) {
+    res.json({ valid: true, user });
   } else {
     res.status(401).json({ valid: false });
   }
 });
 
-// Logout endpoint
+// Logout endpoint (stateless, just returns success)
 app.post('/api/logout', (req, res) => {
-  const auth = req.headers.authorization || '';
-  const token = auth.replace('Bearer ', '');
-  
-  tokens.delete(token);
   res.json({ success: true });
 });
 
-// Authentication middleware
-app.use((req, res, next) => {
-  // Skip auth for login page and login endpoint
-  if (req.path === '/login' || req.path === '/login.html' || req.path === '/api/login' || req.path === '/api/verify' || req.path === '/api/health') {
-    return next();
-  }
-  
-  // Skip auth for static assets
-  if (req.path.match(/\.(js|css|png|jpg|gif|svg|ico|woff|woff2|ttf)$/i)) {
-    return next();
-  }
-  
-  // Check for Bearer token
-  const auth = req.headers.authorization || '';
-  const token = auth.replace('Bearer ', '');
-  
-  if (tokens.has(token)) {
-    req.user = tokens.get(token);
-    return next();
-  }
-  
-  // Redirect to login page for HTML requests
-  if (req.path === '/' || req.path === '/index.html') {
-    return res.redirect('/login');
-  }
-  
-  // Return 401 for API requests
-  res.status(401).json({ error: 'Authentication required' });
-});
-
+// Static files middleware (for JS, CSS, images)
 app.use(express.static(path.join(__dirname, 'public')));
 
-// Clean URL routing (remove .html extensions)
-app.get('/login', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public/login.html'));
+// Authentication middleware for protected routes
+app.use((req, res, next) => {
+  // All API routes except login/verify/health/logout require auth
+  if (req.path.startsWith('/api/')) {
+    if (req.path === '/api/login' || req.path === '/api/verify' || req.path === '/api/health' || req.path === '/api/logout') {
+      return next();
+    }
+    
+    const auth = req.headers.authorization || '';
+    const token = auth.replace('Bearer ', '');
+    const user = decodeToken(token);
+    
+    if (user) {
+      req.user = user;
+      return next();
+    }
+    
+    return res.status(401).json({ error: 'Authentication required' });
+  }
+  
+  // For HTML pages, redirect to login if no valid token
+  if (req.path === '/' || req.path === '/index.html') {
+    // Don't check token on server side for HTML pages
+    // Let the client-side auth.js handle it
+    return next();
+  }
+  
+  next();
 });
 
 // Fallback data

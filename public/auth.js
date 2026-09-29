@@ -39,19 +39,33 @@
       return originalFetch.apply(this, args);
     }
     
-    if (args[1]) {
-      args[1].headers = args[1].headers || {};
-      if (!args[1].headers['Authorization']) {
-        args[1].headers['Authorization'] = 'Bearer ' + token;
-      }
-    } else {
-      args[1] = {
-        headers: {
-          'Authorization': 'Bearer ' + token
-        }
-      };
+    // Get the URL
+    const url = typeof args[0] === 'string' ? args[0] : args[0].url;
+    
+    // Create or modify options
+    let options = args[1] || {};
+    
+    // Handle Headers object or plain object
+    if (!options.headers) {
+      options.headers = {};
     }
-    return originalFetch.apply(this, args);
+    
+    // Convert Headers object to plain object if needed
+    if (options.headers instanceof Headers) {
+      const plainHeaders = {};
+      options.headers.forEach((value, key) => {
+        plainHeaders[key] = value;
+      });
+      options.headers = plainHeaders;
+    }
+    
+    // Add authorization header if not already present
+    if (!options.headers['Authorization'] && !options.headers['authorization']) {
+      options.headers['Authorization'] = 'Bearer ' + token;
+    }
+    
+    // Call original fetch
+    return originalFetch.call(this, url, options);
   };
   
   // Add logout functionality

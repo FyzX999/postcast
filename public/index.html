@@ -1,0 +1,1832 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Postcast - Upload Once. Post Everywhere.</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@400;600;800&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<style>
+:root{--bg:#f8fafc;--card:#fff;--ink:#0f172a;--muted:#64748b;--line:#e2e8f0;--accent:#3b82f6;--accent-dark:#2563eb;--accent-light:#93c5fd;--ok:#10b981;--warning:#f59e0b;--bad:#ef4444;--surface:#f1f5f9;--shadow:0 4px 6px rgba(0,0,0,0.07),0 10px 13px rgba(0,0,0,0.05);--shadow-lg:0 10px 15px rgba(0,0,0,0.1),0 4px 6px rgba(0,0,0,0.05);color-scheme:light}
+@media(prefers-color-scheme:dark){:root{--bg:#0f172a;--card:#1e293b;--ink:#f1f5f9;--muted:#94a3b8;--line:#334155;--accent:#60a5fa;--accent-dark:#3b82f6;--accent-light:#93c5fd;--ok:#34d399;--warning:#fbbf24;--bad:#f87171;--surface:#1e293b;--shadow:0 4px 6px rgba(0,0,0,0.3),0 10px 13px rgba(0,0,0,0.2);--shadow-lg:0 10px 15px rgba(0,0,0,0.4),0 4px 6px rgba(0,0,0,0.2);color-scheme:dark}}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--ink);font:16px/1.6 "Bricolage Grotesque",system-ui,sans-serif;padding:max(16px,env(safe-area-inset-top)) 16px max(32px,env(safe-area-inset-bottom));transition:background .3s,color .3s}
+main{max-width:900px;margin:0 auto;display:grid;gap:24px}
+header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px}
+h1{font-size:2.5rem;font-weight:800;margin:0;letter-spacing:-.03em;background:linear-gradient(135deg,var(--accent),var(--accent-dark));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.header-actions{display:flex;gap:8px;align-items:center}
+.theme-toggle{width:40px;height:40px;border:1px solid var(--line);border-radius:10px;background:var(--card);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:1.2rem;transition:all .2s}
+.theme-toggle:hover{background:var(--surface);box-shadow:var(--shadow)}
+p.sub{margin:4px 0 0;color:var(--muted);font-size:.95rem}
+nav{display:flex;gap:8px;margin-bottom:8px;border-bottom:2px solid var(--line);padding-bottom:0}
+nav button{padding:12px 20px;background:transparent;color:var(--muted);border:none;border-bottom:3px solid transparent;font-weight:600;cursor:pointer;transition:all .2s;font-size:.95rem}
+nav button:hover{color:var(--accent)}
+nav button.cur{color:var(--accent);border-bottom-color:var(--accent)}
+section{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:24px;box-shadow:var(--shadow);transition:all .2s}
+section:hover{box-shadow:var(--shadow-lg)}
+h2{font-size:1.3rem;font-weight:700;margin:0 0 16px;display:flex;align-items:center;gap:8px}
+h3{font-size:1.1rem;font-weight:700;margin:20px 0 12px}
+p.sub{font-size:.85rem;color:var(--muted)}
+label{display:block;font-weight:600;margin:16px 0 6px;color:var(--ink)}
+input[type=text],input[type=email],input[type=password],input[type=datetime-local],textarea,select{width:100%;font:inherit;color:inherit;background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:11px 14px;transition:all .2s}
+input[type=text]:focus,input[type=email]:focus,input[type=password]:focus,input[type=datetime-local]:focus,textarea:focus,select:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px rgba(59,130,246,.1)}
+input[type=file]{accent-color:var(--accent)}
+textarea{min-height:100px;resize:vertical}
+button,.btn{font:inherit;font-weight:600;border:0;border-radius:10px;padding:12px 20px;min-height:44px;cursor:pointer;background:var(--accent);color:#fff;transition:all .2s;display:inline-flex;align-items:center;justify-content:center;gap:8px}
+button:hover,.btn:hover{background:var(--accent-dark);box-shadow:var(--shadow)}
+button:active,.btn:active{transform:scale(.98)}
+button.alt{background:var(--surface);color:var(--ink);border:1px solid var(--line)}
+button.alt:hover{background:var(--line);border-color:var(--accent)}
+button.secondary{background:transparent;color:var(--accent);border:2px solid var(--accent)}
+button.secondary:hover{background:rgba(59,130,246,.1)}
+button:disabled,.btn:disabled{opacity:.5;cursor:not-allowed;transform:none}
+:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+.row{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 0;border-top:1px solid var(--line);flex-wrap:wrap}
+.row:first-of-type{border-top:0}
+.status{font-size:.85rem;color:var(--muted)}
+.on{color:var(--ok)}.off{color:var(--bad)}.warning{color:var(--warning)}
+.picks{display:grid;gap:8px;margin:12px 0}
+.picks label{display:flex;gap:10px;align-items:center;font-weight:400;margin:0;min-height:36px;cursor:pointer}
+.picks input{width:20px;height:20px;cursor:pointer}
+.msg{white-space:pre-wrap;padding:12px;border-radius:10px;margin-top:12px}
+.msg.success{background:rgba(16,185,129,.1);color:var(--ok);border:1px solid rgba(16,185,129,.2)}
+.msg.error{background:rgba(239,68,68,.1);color:var(--bad);border:1px solid rgba(239,68,68,.2)}
+.msg.info{background:rgba(59,130,246,.1);color:var(--accent);border:1px solid rgba(59,130,246,.2)}
+.actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:16px}
+.actions-right{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end}
+.bar{height:6px;border-radius:99px;background:var(--line);overflow:hidden;margin:12px 0}
+.bar i{display:block;height:100%;background:var(--ok);transition:width .3s}
+.tbl{overflow-x:auto;margin-top:12px}
+table{width:100%;border-collapse:collapse;font-size:.9rem}
+th,td{text-align:left;padding:10px 12px;border-top:1px solid var(--line)}
+th{font-weight:700;background:var(--surface);color:var(--accent)}
+td:first-child{white-space:normal;min-width:140px}
+ul{margin:8px 0 0;padding-left:20px}
+[hidden]{display:none!important}
+.grid{display:grid;gap:16px;grid-template-columns:repeat(auto-fit,minmax(200px,1fr))}
+.card-compact{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:16px;transition:all .2s}
+.card-compact:hover{background:var(--card);box-shadow:var(--shadow)}
+.badge{display:inline-block;padding:4px 12px;border-radius:20px;font-size:.85rem;font-weight:600;background:var(--surface);color:var(--accent);border:1px solid var(--accent)}
+.badge.ok{background:rgba(16,185,129,.1);color:var(--ok);border-color:var(--ok)}
+.badge.warning{background:rgba(245,158,11,.1);color:var(--warning);border-color:var(--warning)}
+.badge.bad{background:rgba(239,68,68,.1);color:var(--bad);border-color:var(--bad)}
+.upload-zone{border:2px dashed var(--line);border-radius:12px;padding:32px 24px;text-align:center;cursor:pointer;transition:all .2s;background:var(--surface)}
+.upload-zone:hover{border-color:var(--accent);background:rgba(59,130,246,.05)}
+.upload-zone.active{border-color:var(--accent);background:rgba(59,130,246,.1)}
+.upload-zone-icon{font-size:2.5rem;margin-bottom:12px}
+.progress-bar{width:100%;height:8px;background:var(--line);border-radius:10px;overflow:hidden;margin:12px 0}
+.progress-bar .fill{height:100%;background:linear-gradient(90deg,var(--accent),var(--accent-dark));width:0%;transition:width .3s}
+.loading{display:inline-block;width:16px;height:16px;border:2px solid var(--line);border-top-color:var(--accent);border-radius:50%;animation:spin .8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.notification-center{position:fixed;bottom:20px;right:20px;display:flex;flex-direction:column;gap:10px;z-index:2000;max-width:320px}
+.notification{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:14px;box-shadow:var(--shadow-lg);animation:slideIn .3s ease-out;display:flex;align-items:flex-start;gap:12px}
+.notification.success{border-left:4px solid var(--ok);background:rgba(16,185,129,.05)}
+.notification.error{border-left:4px solid var(--bad);background:rgba(239,68,68,.05)}
+.notification.info{border-left:4px solid var(--accent);background:rgba(59,130,246,.05)}
+.notification.warning{border-left:4px solid var(--warning);background:rgba(245,158,11,.05)}
+.notification-icon{font-size:1.2rem;flex-shrink:0;margin-top:2px}
+.notification-content{flex:1;min-width:0}
+.notification-title{font-weight:600;margin:0 0 4px;font-size:.95rem}
+.notification-message{margin:0;font-size:.85rem;color:var(--muted)}
+.notification-close{background:transparent;border:none;color:var(--muted);cursor:pointer;padding:0;font-size:1.2rem;line-height:1}
+.notification-close:hover{color:var(--ink)}
+@keyframes slideIn{from{transform:translateX(400px);opacity:0}to{transform:translateX(0);opacity:1}}
+@keyframes slideOut{from{transform:translateX(0);opacity:1}to{transform:translateX(400px);opacity:0}}
+.tabs{display:flex;gap:4px;margin-bottom:16px;border-bottom:1px solid var(--line)}
+.tab{padding:12px 16px;background:transparent;border:none;border-bottom:2px solid transparent;cursor:pointer;font-weight:600;transition:all .2s;color:var(--muted)}
+.tab:hover{color:var(--ink)}
+.tab.active{color:var(--accent);border-bottom-color:var(--accent)}
+.form-group{display:grid;gap:12px;margin-bottom:16px}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+@media(max-width:600px){.form-row{grid-template-columns:1fr}.header-actions{flex-direction:column;width:100%}.grid{grid-template-columns:1fr}}
+.highlight{background:rgba(59,130,246,.05);border-left:3px solid var(--accent);padding:12px;border-radius:6px;margin:12px 0}
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <div>
+      <h1>Postcast</h1>
+      <p class="sub">Upload once. Post everywhere.</p>
+    </div>
+    <div class="header-actions">
+      <button class="theme-toggle" id="theme-toggle" title="Toggle dark mode">🌙</button>
+    </div>
+  </header>
+  <nav><button class="cur" data-v="post">📤 Post</button><button data-v="batch">📦 Batch Upload</button><button data-v="history">📋 History</button><button data-v="earn">💰 Earn</button></nav>
+  <div id="view-post" style="display:grid;gap:16px">
+
+  <section>
+    <h2>🔌 Connected Accounts</h2>
+    <div id="platforms" class="grid"></div>
+  </section>
+
+  <section>
+    <h2>📤 New Post</h2>
+    
+    <div class="form-group">
+      <label for="video">Select Video</label>
+      <div id="upload-zone" class="upload-zone">
+        <div class="upload-zone-icon">📹</div>
+        <strong>Drag and drop your video here</strong>
+        <p class="status" style="margin-top:6px">or click to browse</p>
+        <input id="video" type="file" accept="video/*" style="display:none">
+      </div>
+      <div id="video-preview" hidden style="margin-top:16px;display:grid;gap:12px;grid-template-columns:auto 1fr">
+        <div style="position:relative;grid-column:1;width:180px;height:100px">
+          <video id="preview-video" style="width:100%;height:100%;border-radius:10px;background:var(--surface);object-fit:cover;filter:var(--video-filter,none);transform:scale(var(--video-scale,1))"></video>
+          <div id="video-overlay" style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);color:#fff;text-shadow:0 2px 4px rgba(0,0,0,.5);font-size:.8rem;white-space:nowrap">
+            <div id="duration-badge" style="background:rgba(0,0,0,.6);padding:4px 8px;border-radius:4px">0:00</div>
+          </div>
+        </div>
+        <div style="grid-column:2;display:grid;gap:8px;grid-template-columns:1fr 1fr">
+          <div class="card-compact">
+            <p class="status">Filename</p>
+            <p id="video-name" style="font-weight:600;font-size:.95rem;overflow:hidden;text-overflow:ellipsis">—</p>
+          </div>
+          <div class="card-compact">
+            <p class="status">Size</p>
+            <p id="video-size" style="font-weight:600;font-size:.95rem">—</p>
+          </div>
+          <div class="card-compact">
+            <p class="status">Duration</p>
+            <p id="video-duration" style="font-weight:600;font-size:.95rem">—</p>
+          </div>
+          <div class="card-compact">
+            <p class="status">Resolution</p>
+            <p id="video-resolution" style="font-weight:600;font-size:.95rem">—</p>
+          </div>
+          <div class="card-compact">
+            <p class="status">Aspect Ratio</p>
+            <p id="video-aspect" style="font-weight:600;font-size:.95rem">—</p>
+          </div>
+          <div class="card-compact">
+            <p class="status">Format</p>
+            <p id="video-format" style="font-weight:600;font-size:.95rem">—</p>
+          </div>
+        </div>
+        <div id="video-info" class="status" style="grid-column:1/-1;padding:12px;background:var(--surface);border-radius:10px;border-left:3px solid var(--accent)"></div>
+        <div id="upload-progress" hidden style="grid-column:1/-1">
+          <p class="status" style="margin-bottom:8px">Uploading... <span id="progress-percent">0</span>%</p>
+          <div class="progress-bar">
+            <div class="fill" id="progress-fill"></div>
+          </div>
+        </div>
+        <div style="grid-column:1/-1;display:flex;gap:8px">
+          <button id="clear-video" class="alt" style="flex:1">❌ Clear Video</button>
+          <button id="replace-video" class="alt" style="flex:1">🔄 Replace Video</button>
+          <button id="edit-video" class="alt" style="flex:1">✂️ Edit Video</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Video Editor Modal -->
+    <div id="editor-modal" hidden style="position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.7);display:flex;align-items:center;justify-content:center;z-index:1000;padding:20px">
+      <div style="background:var(--card);border-radius:16px;max-width:600px;width:100%;max-height:90vh;overflow-y:auto;padding:24px">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px">
+          <h2 style="margin:0">✂️ Video Editor</h2>
+          <button id="close-editor" class="alt" style="width:40px;height:40px;padding:0;display:flex;align-items:center;justify-content:center">✕</button>
+        </div>
+
+        <div style="display:grid;gap:16px">
+          <!-- Trim Section -->
+          <div class="card-compact" style="background:var(--surface)">
+            <h3 style="margin-top:0">Trim Video</h3>
+            <p class="status">Trim start and end times</p>
+            <div style="display:grid;gap:12px;margin-top:12px">
+              <div>
+                <label>Start Time (seconds)</label>
+                <input id="trim-start" type="number" min="0" value="0" step="0.1">
+              </div>
+              <div>
+                <label>End Time (seconds)</label>
+                <input id="trim-end" type="number" min="0" step="0.1" value="0">
+              </div>
+              <p class="status">Trimmed duration: <span id="trimmed-duration">0s</span></p>
+            </div>
+          </div>
+
+          <!-- Speed Control Section -->
+          <div class="card-compact" style="background:var(--surface)">
+            <h3 style="margin-top:0">Speed Control</h3>
+            <p class="status">Change playback speed</p>
+            <div style="margin-top:12px">
+              <label>Speed: <span id="speed-value">1.0</span>x</label>
+              <input id="speed-slider" type="range" min="0.25" max="2" step="0.25" value="1" style="width:100%;margin-top:8px;accent-color:var(--accent)">
+              <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:8px;font-size:.85rem">
+                <button class="alt" style="padding:8px" onclick="$('speed-slider').value='0.25';updateSpeed()">0.25x</button>
+                <button class="alt" style="padding:8px" onclick="$('speed-slider').value='0.5';updateSpeed()">0.5x</button>
+                <button class="alt" style="padding:8px" onclick="$('speed-slider').value='1';updateSpeed()">1x</button>
+                <button class="alt" style="padding:8px" onclick="$('speed-slider').value='1.5';updateSpeed()">1.5x</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Filters Section -->
+          <div class="card-compact" style="background:var(--surface)">
+            <h3 style="margin-top:0">Visual Effects</h3>
+            <div style="display:grid;gap:12px">
+              <div>
+                <label>Filter</label>
+                <select id="filter-select">
+                  <option value="none">None</option>
+                  <option value="brightness">Brightness</option>
+                  <option value="contrast">Contrast</option>
+                  <option value="grayscale">Grayscale</option>
+                  <option value="sepia">Sepia</option>
+                  <option value="saturate">Saturate</option>
+                  <option value="blur">Blur</option>
+                </select>
+              </div>
+              <div>
+                <label>Intensity: <span id="filter-intensity">50</span>%</label>
+                <input id="filter-slider" type="range" min="0" max="100" value="50" style="width:100%;accent-color:var(--accent)">
+              </div>
+            </div>
+          </div>
+
+          <!-- Crop/Scale Section -->
+          <div class="card-compact" style="background:var(--surface)">
+            <h3 style="margin-top:0">Crop & Scale</h3>
+            <select id="crop-preset">
+              <option value="none">No Crop</option>
+              <option value="9-16">Vertical (9:16) - TikTok/Reels</option>
+              <option value="16-9">Horizontal (16:9) - YouTube</option>
+              <option value="1-1">Square (1:1) - Instagram</option>
+            </select>
+            <p class="status" style="margin-top:8px">Preview updates in real-time</p>
+          </div>
+
+          <!-- Preview -->
+          <div class="card-compact" style="background:var(--surface);text-align:center">
+            <p class="status">Preview with current effects</p>
+            <video id="editor-preview" style="width:100%;max-height:200px;border-radius:8px;background:#000;margin-top:8px;filter:var(--video-filter,none);transform:scale(var(--video-scale,1))"></video>
+          </div>
+
+          <div style="display:flex;gap:8px">
+            <button id="apply-edits" class="btn" style="flex:1">✅ Apply Edits</button>
+            <button id="reset-edits" class="alt" style="flex:1">↺ Reset</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label for="topic">What's this video about? <span class="status">(Required)</span></label>
+      <input id="topic" type="text" placeholder="e.g. 60-second sourdough shaping tips, trending dance move, product review...">
+    </div>
+
+    <div class="form-group">
+      <label for="title">Title <span class="status">(Auto-generated or edit manually)</span></label>
+      <div style="display:flex;gap:8px">
+        <input id="title" type="text" style="flex:1" placeholder="Video title for all platforms">
+        <button id="gen" class="alt" title="Generate with AI">✨ Generate</button>
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label for="desc">Description <span class="status">(Character limits vary by platform)</span></label>
+      <textarea id="desc" placeholder="Add details, hashtags, links..."></textarea>
+      <p class="status">Char count: <span id="char-count">0</span></p>
+      
+      <div style="display:flex;gap:8px;margin-top:8px">
+        <button id="suggest-hashtags" class="alt" style="flex:1">🏷️ Suggest Hashtags</button>
+        <button id="optimize-desc" class="alt" style="flex:1">✨ Optimize Description</button>
+      </div>
+      
+      <div id="hashtag-suggestions" hidden style="margin-top:12px;padding:12px;background:rgba(59,130,246,.05);border-radius:10px;border-left:3px solid var(--accent)">
+        <p class="status" style="margin:0 0 8px"><strong>Suggested Hashtags</strong></p>
+        <div id="hashtag-list" style="display:flex;flex-wrap:wrap;gap:6px"></div>
+        <button id="add-hashtags" class="alt" style="margin-top:8px">✓ Add to Description</button>
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label for="schedule">Schedule Post (Optional)</label>
+      <input id="schedule" type="datetime-local">
+      <p class="status">Leave empty to post immediately</p>
+      <div id="schedule-info" hidden style="padding:12px;background:rgba(245,158,11,.1);border-radius:10px;border-left:3px solid var(--warning);margin-top:8px">
+        <p class="status" style="color:var(--warning);margin:0">⏰ Scheduled for <span id="scheduled-time">—</span></p>
+        <p class="status" style="margin:4px 0 0">This post will automatically publish at the scheduled time.</p>
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label>🎯 Post to</label>
+      <div id="picks" class="picks"></div>
+    </div>
+
+    <div class="actions">
+      <button id="publish" class="btn">📤 Publish Now</button>
+      <button id="schedule-btn" class="alt">📅 Schedule Post</button>
+      <button id="save-draft" class="alt">💾 Save Draft</button>
+    </div>
+    <div id="msg" role="status"></div>
+  </section>
+
+  <section>
+    <h2>⚙️ Settings & Defaults</h2>
+    <div class="tabs">
+      <button class="tab active" data-tab="defaults">Defaults</button>
+      <button class="tab" data-tab="advanced">Advanced</button>
+    </div>
+    
+    <div id="tab-defaults">
+      <label for="def">Default Description</label>
+      <p class="status">Added to every post (hashtags, links, credits...)</p>
+      <textarea id="def" placeholder="e.g. Follow for more | bit.ly/link | #content"></textarea>
+      
+      <label for="style">AI Style Notes</label>
+      <p class="status">Tell the AI how to write titles and descriptions</p>
+      <input id="style" type="text" placeholder="e.g. playful, no emojis, professional tone">
+      
+      <div class="actions"><button id="save" class="alt">💾 Save Settings</button></div>
+    </div>
+
+    <div id="tab-advanced" hidden>
+      <h3>Advanced Options</h3>
+      <label for="hashtag-strategy">Hashtag Strategy</label>
+      <select id="hashtag-strategy">
+        <option value="auto">Auto-generate (AI)</option>
+        <option value="manual">Manual entry</option>
+        <option value="none">No hashtags</option>
+      </select>
+      
+      <label for="resize-video">Video Processing</label>
+      <select id="resize-video">
+        <option value="auto">Auto-detect platform</option>
+        <option value="9-16">Vertical (9:16) - Shorts/TikTok</option>
+        <option value="16-9">Horizontal (16:9) - YouTube</option>
+        <option value="1-1">Square (1:1) - Instagram</option>
+      </select>
+
+      <label style="display:flex;gap:10px;margin-top:16px">
+        <input type="checkbox" id="add-watermark" style="width:20px;height:20px">
+        Add watermark to video
+      </label>
+      
+      <div class="actions"><button id="save-advanced" class="alt">💾 Save Advanced Settings</button></div>
+    </div>
+  </section>
+  </div>
+
+  <div id="view-batch" hidden style="display:grid;gap:16px">
+    <section>
+      <h2>📦 Batch Upload Multiple Videos</h2>
+      <p class="sub">Upload and publish multiple videos at once with the same settings.</p>
+      
+      <div class="form-group">
+        <label for="batch-videos">Select Multiple Videos</label>
+        <div id="batch-upload-zone" class="upload-zone">
+          <div class="upload-zone-icon">📁</div>
+          <strong>Drag and drop multiple videos here</strong>
+          <p class="status" style="margin-top:6px">or click to browse (all will use same title/description)</p>
+          <input id="batch-videos" type="file" accept="video/*" multiple style="display:none">
+        </div>
+        <div id="batch-files" hidden style="margin-top:16px;max-height:300px;overflow-y:auto">
+          <p class="status" style="margin-bottom:12px">📹 Selected files: <span id="batch-count">0</span></p>
+          <div id="batch-list" style="display:grid;gap:8px"></div>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="batch-topic">What are these videos about?</label>
+        <input id="batch-topic" type="text" placeholder="Common topic for all videos">
+        <button id="batch-gen" class="alt">✨ Generate Titles</button>
+      </div>
+
+      <div class="form-group">
+        <label for="batch-title-template">Title Template</label>
+        <input id="batch-title-template" type="text" placeholder="e.g. Tutorial Part {n} or Video #{n}">
+        <p class="status">Use {n} as a placeholder for video number</p>
+      </div>
+
+      <div class="form-group">
+        <label for="batch-desc">Description (applies to all)</label>
+        <textarea id="batch-desc" placeholder="Add details, hashtags, links..."></textarea>
+      </div>
+
+      <div class="form-group">
+        <label>🎯 Post to</label>
+        <div id="batch-picks" class="picks"></div>
+      </div>
+
+      <div class="form-group">
+        <label for="batch-schedule">Schedule All Posts</label>
+        <input id="batch-schedule" type="datetime-local">
+        <p class="status">Leave empty to post immediately. Each will post at this time (or staggered if you prefer)</p>
+        
+        <label style="margin-top:12px">Posting Strategy</label>
+        <select id="batch-strategy">
+          <option value="all-at-once">All at once</option>
+          <option value="staggered-30min">Staggered (30 min apart)</option>
+          <option value="staggered-1hour">Staggered (1 hour apart)</option>
+          <option value="staggered-daily">Staggered (daily)</option>
+        </select>
+      </div>
+
+      <div class="actions">
+        <button id="batch-publish" class="btn">📤 Publish All</button>
+        <button id="batch-clear" class="alt">❌ Clear All</button>
+      </div>
+      <div id="batch-msg" role="status"></div>
+
+      <div id="batch-progress" hidden style="margin-top:16px">
+        <div class="card-compact" style="background:var(--surface)">
+          <p class="status">Batch Progress: <span id="batch-current">0</span>/<span id="batch-total">0</span></p>
+          <div class="progress-bar">
+            <div class="fill" id="batch-progress-fill"></div>
+          </div>
+          <div id="batch-results" style="margin-top:12px;max-height:200px;overflow-y:auto;font-size:.85rem">
+            <p class="status">Uploading...</p>
+          </div>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <div id="view-history" hidden style="display:grid;gap:16px">
+    <section>
+      <h2>📋 Post History & Management</h2>
+      <div class="tabs">
+        <button class="tab active" data-tab="all">All</button>
+        <button class="tab" data-tab="scheduled">📅 Scheduled</button>
+        <button class="tab" data-tab="published">✅ Published</button>
+        <button class="tab" data-tab="drafts">📝 Drafts</button>
+        <button class="tab" data-tab="failed">❌ Failed</button>
+      </div>
+
+      <div style="display:flex;gap:8px;margin-top:16px;margin-bottom:16px">
+        <input id="history-search" type="text" placeholder="Search posts..." style="flex:1">
+        <button id="history-refresh" class="alt">🔄 Refresh</button>
+      </div>
+
+      <div id="history-container" style="margin-top:16px">
+        <p class="status">Loading post history...</p>
+      </div>
+    </section>
+  </div>
+
+  <div id="view-earn" hidden style="display:grid;gap:16px">
+    <section>
+      <h2>📊 Your Analytics Dashboard</h2>
+      <div class="tabs">
+        <button class="tab active" data-tab="overview">Overview</button>
+        <button class="tab" data-tab="detailed">Detailed Stats</button>
+        <button class="tab" data-tab="growth">Growth Trends</button>
+      </div>
+
+      <div id="tab-overview">
+        <div class="grid" style="grid-template-columns:repeat(auto-fit,minmax(150px,1fr));margin-top:16px">
+          <div class="card-compact">
+            <p class="status">Total Followers</p>
+            <p id="stat-followers" style="font-size:1.8rem;font-weight:700;color:var(--accent);margin:8px 0">—</p>
+            <p class="status" id="stat-followers-change">+0%</p>
+          </div>
+          <div class="card-compact">
+            <p class="status">Total Videos</p>
+            <p id="stat-videos" style="font-size:1.8rem;font-weight:700;color:var(--accent);margin:8px 0">—</p>
+          </div>
+          <div class="card-compact">
+            <p class="status">Total Views</p>
+            <p id="stat-views" style="font-size:1.8rem;font-weight:700;color:var(--accent);margin:8px 0">—</p>
+          </div>
+          <div class="card-compact">
+            <p class="status">Avg Engagement</p>
+            <p id="stat-engagement" style="font-size:1.8rem;font-weight:700;color:var(--accent);margin:8px 0">—</p>
+          </div>
+        </div>
+
+        <div style="margin-top:16px;display:grid;gap:16px;grid-template-columns:repeat(auto-fit,minmax(300px,1fr))">
+          <div class="card-compact" style="background:var(--surface)">
+            <h3 style="margin-top:0">Platform Breakdown</h3>
+            <div id="platform-breakdown" style="display:grid;gap:8px"></div>
+          </div>
+          <div class="card-compact" style="background:var(--surface)">
+            <h3 style="margin-top:0">Top Performing Videos</h3>
+            <div id="top-videos" style="display:grid;gap:8px;max-height:300px;overflow-y:auto"></div>
+          </div>
+        </div>
+      </div>
+
+      <div id="tab-detailed" hidden>
+        <div id="detailed-stats" style="margin-top:16px"></div>
+      </div>
+
+      <div id="tab-growth" hidden>
+        <div style="margin-top:16px;display:grid;gap:16px">
+          <div class="card-compact" style="background:var(--surface)">
+            <h3 style="margin-top:0">Followers Growth</h3>
+            <canvas id="followers-chart" style="max-height:200px"></canvas>
+          </div>
+          <div class="card-compact" style="background:var(--surface)">
+            <h3 style="margin-top:0">Views Over Time</h3>
+            <canvas id="views-chart" style="max-height:200px"></canvas>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <h2>💰 Monetization Requirements</h2>
+      <p class="status highlight">Last updated: September 29, 2026. Platforms change rules frequently — verify on each platform's monetization page.</p>
+      <div id="reqs"></div>
+    </section>
+  </div>
+</main>
+<div id="notification-center" class="notification-center"></div>
+<script>
+const $ = id => document.getElementById(id);
+const $$ = sel => document.querySelectorAll(sel);
+let defaults = { defaultDescription: '', style: '' }, platforms = [];
+const api = (u, o) => fetch(u, o).then(r => r.json());
+
+// Notification System
+class NotificationCenter {
+  constructor() {
+    this.notifications = [];
+  }
+
+  show(message, type = 'info', title = '', duration = 5000) {
+    const id = Date.now();
+    const notification = { id, message, type, title, duration };
+    this.notifications.push(notification);
+    this.render(notification);
+    
+    if (duration > 0) {
+      setTimeout(() => this.remove(id), duration);
+    }
+    return id;
+  }
+
+  render(notification) {
+    const center = $('notification-center');
+    const el = document.createElement('div');
+    el.className = 'notification ' + notification.type;
+    el.id = 'notif-' + notification.id;
+    
+    const icons = { success: '✅', error: '❌', info: 'ℹ️', warning: '⚠️' };
+    
+    el.innerHTML = `
+      <div class="notification-icon">${icons[notification.type] || 'ℹ️'}</div>
+      <div class="notification-content">
+        ${notification.title ? `<p class="notification-title">${esc(notification.title)}</p>` : ''}
+        <p class="notification-message">${esc(notification.message)}</p>
+      </div>
+      <button class="notification-close" onclick="notifications.remove(${notification.id})">×</button>
+    `;
+    
+    center.appendChild(el);
+  }
+
+  remove(id) {
+    const el = $('notif-' + id);
+    if (el) {
+      el.style.animation = 'slideOut .3s ease-out';
+      setTimeout(() => el.remove(), 300);
+    }
+    this.notifications = this.notifications.filter(n => n.id !== id);
+  }
+
+  clear() {
+    $('notification-center').innerHTML = '';
+    this.notifications = [];
+  }
+}
+
+const notifications = new NotificationCenter();
+
+const say = (t, type = 'info') => {
+  const msg = $('msg');
+  msg.textContent = t;
+  msg.className = 'msg ' + type;
+  
+  // Also show as notification for important messages
+  if (type === 'success' || type === 'error') {
+    notifications.show(t, type);
+  }
+};
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const fmt = n => n == null || isNaN(n) ? 'n/a' : Number(n).toLocaleString();
+
+// Theme toggle
+const html = document.documentElement;
+const savedTheme = localStorage.getItem('theme');
+if (savedTheme) html.style.colorScheme = savedTheme;
+$('theme-toggle').addEventListener('click', () => {
+  const isDark = html.style.colorScheme === 'dark';
+  html.style.colorScheme = isDark ? 'light' : 'dark';
+  localStorage.setItem('theme', html.style.colorScheme);
+  $('theme-toggle').textContent = isDark ? '🌙' : '☀️';
+});
+
+// Form persistence
+function saveFormData() {
+  localStorage.setItem('postForm', JSON.stringify({
+    topic: $('topic').value,
+    title: $('title').value,
+    desc: $('desc').value,
+    schedule: $('schedule').value,
+  }));
+}
+function restoreFormData() {
+  const saved = localStorage.getItem('postForm');
+  if (saved) {
+    const data = JSON.parse(saved);
+    $('topic').value = data.topic || '';
+    $('title').value = data.title || '';
+    $('desc').value = data.desc || '';
+    $('schedule').value = data.schedule || '';
+    updateCharCount();
+  }
+}
+['topic', 'title', 'desc', 'schedule'].forEach(id => {
+  $(id).addEventListener('change', saveFormData);
+  $(id).addEventListener('input', saveFormData);
+});
+
+// Video handling with preview
+const uploadZone = $('upload-zone');
+const videoInput = $('video');
+['dragover', 'dragenter'].forEach(event => {
+  uploadZone.addEventListener(event, (e) => {
+    e.preventDefault();
+    uploadZone.classList.add('active');
+  });
+});
+['dragleave', 'drop'].forEach(event => {
+  uploadZone.addEventListener(event, () => uploadZone.classList.remove('active'));
+});
+uploadZone.addEventListener('drop', (e) => {
+  e.preventDefault();
+  if (e.dataTransfer.files.length) {
+    videoInput.files = e.dataTransfer.files;
+    handleVideoSelect();
+  }
+});
+uploadZone.addEventListener('click', () => videoInput.click());
+videoInput.addEventListener('change', handleVideoSelect);
+
+function handleVideoSelect() {
+  const file = videoInput.files[0];
+  if (!file) return;
+  const preview = $('video-preview');
+  const videoEl = $('preview-video');
+  
+  const url = URL.createObjectURL(file);
+  videoEl.src = url;
+  preview.hidden = false;
+  
+  videoEl.onloadedmetadata = () => {
+    // Seek to first frame for thumbnail
+    videoEl.currentTime = 0;
+  };
+  
+  videoEl.oncanplay = () => {
+    const duration = Math.floor(videoEl.duration);
+    const mins = Math.floor(duration / 60);
+    const secs = duration % 60;
+    const hours = Math.floor(mins / 60);
+    const sizeMB = (file.size / (1024 * 1024)).toFixed(2);
+    
+    // Calculate aspect ratio
+    const width = videoEl.videoWidth;
+    const height = videoEl.videoHeight;
+    const aspectRatio = (width / height).toFixed(2);
+    
+    // Format duration badge
+    const durationStr = hours > 0 
+      ? `${hours}:${String(mins % 60).padStart(2, '0')}:${String(secs).padStart(2, '0')}`
+      : `${mins}:${String(secs).padStart(2, '0')}`;
+    
+    // Get aspect ratio label
+    let aspectLabel = 'Custom';
+    if (Math.abs(aspectRatio - 1) < 0.05) aspectLabel = '1:1 (Square)';
+    else if (Math.abs(aspectRatio - 0.5625) < 0.05) aspectLabel = '16:9 (Landscape)';
+    else if (Math.abs(aspectRatio - 1.778) < 0.05) aspectLabel = '9:16 (Vertical)';
+    else if (Math.abs(aspectRatio - 0.75) < 0.05) aspectLabel = '4:3';
+    else if (Math.abs(aspectRatio - 2.39) < 0.05) aspectLabel = '21:9 (Cinematic)';
+    
+    // Update display
+    $('duration-badge').textContent = durationStr;
+    $('video-name').textContent = file.name;
+    $('video-size').textContent = sizeMB + ' MB';
+    $('video-duration').textContent = durationStr;
+    $('video-resolution').textContent = `${width}×${height}`;
+    $('video-aspect').textContent = aspectLabel;
+    $('video-format').textContent = file.type.split('/')[1].toUpperCase() || 'Video';
+    
+    // Platform compatibility
+    let platformInfo = '';
+    if (width < height) {
+      platformInfo = '✅ Perfect for TikTok, Instagram Reels, YouTube Shorts (vertical)';
+    } else if (Math.abs(width - height) < 10) {
+      platformInfo = '✅ Good for Instagram (square feed)';
+    } else {
+      platformInfo = '⚠️ Horizontal format - will be cropped on vertical platforms (TikTok, Reels, Shorts)';
+    }
+    
+    $('video-info').innerHTML = platformInfo + (sizeMB > 100 ? '<br>⚠️ Large file (>100MB) - upload may take time' : '');
+  };
+}
+
+// Character counter
+function updateCharCount() {
+  $('char-count').textContent = $('desc').value.length;
+}
+$('desc').addEventListener('input', updateCharCount);
+
+// Hashtag Suggestions
+let suggestedHashtags = [];
+
+$('suggest-hashtags').onclick = async () => {
+  if (!$('topic').value.trim()) return say('Describe the video first', 'error');
+  
+  $('suggest-hashtags').disabled = true;
+  say('🏷️ Generating hashtag suggestions...', 'info');
+  notifications.show('Analyzing your content...', 'info', '🏷️ Hashtag Generator');
+  
+  try {
+    const r = await api('/api/suggest-hashtags', { 
+      method: 'POST', 
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ 
+        topic: $('topic').value,
+        title: $('title').value,
+        description: $('desc').value
+      })
+    });
+    
+    $('suggest-hashtags').disabled = false;
+    
+    if (r.error) return say('AI error: ' + r.error, 'error');
+    
+    suggestedHashtags = r.hashtags || [];
+    
+    const hashtags = suggestedHashtags.map(h => `
+      <span class="badge" style="cursor:pointer;user-select:none" onclick="copyToClipboard('${h}')" title="Click to copy">${h}</span>
+    `).join('');
+    
+    $('hashtag-list').innerHTML = hashtags;
+    $('hashtag-suggestions').hidden = false;
+    say('✅ Generated ' + suggestedHashtags.length + ' hashtag suggestions', 'success');
+    notifications.show(suggestedHashtags.length + ' hashtags ready to use', 'success', '✅ Hashtags Ready');
+  } catch (e) {
+    $('suggest-hashtags').disabled = false;
+    say('❌ ' + e.message, 'error');
+  }
+};
+
+$('add-hashtags').onclick = () => {
+  if (!suggestedHashtags.length) return;
+  
+  const currentDesc = $('desc').value;
+  const hashtagsText = suggestedHashtags.join(' ');
+  const newDesc = currentDesc.trim() + (currentDesc.trim() ? '\n' : '') + hashtagsText;
+  
+  $('desc').value = newDesc;
+  updateCharCount();
+  saveFormData();
+  
+  say('✅ Hashtags added to description', 'success');
+  notifications.show('Added ' + suggestedHashtags.length + ' hashtags', 'success', '✅ Hashtags Added');
+  $('hashtag-suggestions').hidden = true;
+};
+
+$('optimize-desc').onclick = async () => {
+  if (!$('desc').value.trim()) return say('Add a description first', 'error');
+  
+  $('optimize-desc').disabled = true;
+  say('✨ Optimizing description...', 'info');
+  notifications.show('Improving engagement...', 'info', '✨ Optimizing');
+  
+  try {
+    const r = await api('/api/optimize-content', { 
+      method: 'POST', 
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ 
+        title: $('title').value,
+        description: $('desc').value,
+        topic: $('topic').value,
+        platforms: [...$$('#picks input:checked')].map(i => i.value)
+      })
+    });
+    
+    $('optimize-desc').disabled = false;
+    
+    if (r.error) return say('AI error: ' + r.error, 'error');
+    
+    if (r.optimized_description) {
+      $('desc').value = r.optimized_description;
+      updateCharCount();
+      saveFormData();
+      
+      const tips = r.tips ? '\n\nOptimization tips:\n' + r.tips.map(t => '• ' + t).join('\n') : '';
+      say('✅ Description optimized' + tips, 'success');
+      notifications.show('Content optimized for better engagement', 'success', '✅ Optimized');
+    }
+  } catch (e) {
+    $('optimize-desc').disabled = false;
+    say('❌ ' + e.message, 'error');
+  }
+};
+
+function copyToClipboard(text) {
+  navigator.clipboard.writeText(text).then(() => {
+    notifications.show('Copied: ' + text, 'info', '📋 Copied');
+  }).catch(() => {
+    say('Failed to copy', 'error');
+  });
+}
+
+// Video management
+$('clear-video').addEventListener('click', () => {
+  videoInput.value = '';
+  $('video-preview').hidden = true;
+  say('Video cleared', 'info');
+});
+
+$('replace-video').addEventListener('click', () => {
+  videoInput.click();
+});
+
+// Video Editor
+let editorState = {
+  trimStart: 0,
+  trimEnd: 0,
+  speed: 1,
+  filter: 'none',
+  filterIntensity: 50,
+  crop: 'none'
+};
+
+function updateSpeed() {
+  const speed = parseFloat($('speed-slider').value);
+  $('speed-value').textContent = speed.toFixed(2);
+  editorState.speed = speed;
+  updateEditorPreview();
+}
+
+function updateFilter() {
+  const filter = $('filter-select').value;
+  const intensity = parseInt($('filter-slider').value);
+  editorState.filter = filter;
+  editorState.filterIntensity = intensity;
+  
+  let filterCSS = 'none';
+  switch(filter) {
+    case 'brightness':
+      filterCSS = `brightness(${50 + intensity}%)`;
+      break;
+    case 'contrast':
+      filterCSS = `contrast(${50 + intensity * 1.5}%)`;
+      break;
+    case 'grayscale':
+      filterCSS = `grayscale(${intensity}%)`;
+      break;
+    case 'sepia':
+      filterCSS = `sepia(${intensity}%)`;
+      break;
+    case 'saturate':
+      filterCSS = `saturate(${50 + intensity * 1.5}%)`;
+      break;
+    case 'blur':
+      filterCSS = `blur(${intensity * 0.1}px)`;
+      break;
+  }
+  
+  document.documentElement.style.setProperty('--video-filter', filterCSS);
+  $('filter-intensity').textContent = intensity;
+  updateEditorPreview();
+}
+
+function updateCrop() {
+  const crop = $('crop-preset').value;
+  editorState.crop = crop;
+  
+  let scale = 1;
+  if (crop === '9-16') scale = 0.56; // 9:16 aspect
+  else if (crop === '16-9') scale = 1.78; // 16:9 aspect
+  else if (crop === '1-1') scale = 1; // 1:1 aspect
+  
+  document.documentElement.style.setProperty('--video-scale', scale);
+  updateEditorPreview();
+}
+
+function updateTrimmed() {
+  const start = parseFloat($('trim-start').value) || 0;
+  const end = parseFloat($('trim-end').value) || $('preview-video').duration;
+  const duration = Math.max(0, end - start);
+  $('trimmed-duration').textContent = duration.toFixed(1) + 's';
+  editorState.trimStart = start;
+  editorState.trimEnd = end;
+}
+
+function updateEditorPreview() {
+  const preview = $('editor-preview');
+  const mainVideo = $('preview-video');
+  preview.src = mainVideo.src;
+  preview.currentTime = mainVideo.currentTime;
+}
+
+$('speed-slider').addEventListener('input', updateSpeed);
+$('filter-select').addEventListener('change', updateFilter);
+$('filter-slider').addEventListener('input', updateFilter);
+$('crop-preset').addEventListener('change', updateCrop);
+$('trim-start').addEventListener('input', updateTrimmed);
+$('trim-end').addEventListener('input', updateTrimmed);
+
+$('edit-video').addEventListener('click', () => {
+  const video = $('preview-video');
+  if (!video.src) return;
+  
+  // Set max end time to video duration
+  $('trim-end').max = Math.floor(video.duration);
+  $('trim-end').value = Math.floor(video.duration);
+  updateTrimmed();
+  updateEditorPreview();
+  
+  $('editor-modal').hidden = false;
+});
+
+$('close-editor').addEventListener('click', () => {
+  $('editor-modal').hidden = true;
+});
+
+$('reset-edits').addEventListener('click', () => {
+  editorState = { trimStart: 0, trimEnd: 0, speed: 1, filter: 'none', filterIntensity: 50, crop: 'none' };
+  $('trim-start').value = 0;
+  $('trim-end').value = Math.floor($('preview-video').duration);
+  $('speed-slider').value = 1;
+  $('filter-select').value = 'none';
+  $('filter-slider').value = 50;
+  $('crop-preset').value = 'none';
+  
+  document.documentElement.style.setProperty('--video-filter', 'none');
+  document.documentElement.style.setProperty('--video-scale', 1);
+  
+  updateSpeed();
+  updateFilter();
+  updateCrop();
+  updateTrimmed();
+  say('✅ Editor reset', 'info');
+});
+
+$('apply-edits').addEventListener('click', () => {
+  say('✅ Edits saved (client-side preview only). Note: Actual video processing requires backend encoding.', 'info');
+  $('editor-modal').hidden = true;
+});
+
+// Tab switching
+$$('.tab').forEach(tab => {
+  tab.addEventListener('click', () => {
+    const tabName = tab.dataset.tab;
+    $$('.tab').forEach(t => t.classList.toggle('active', t === tab));
+    const container = tab.closest('section') || document.body;
+    container.querySelectorAll('[id^="tab-"]').forEach(el => {
+      el.hidden = el.id !== 'tab-' + tabName;
+    });
+  });
+});
+
+// Main UI
+async function load() {
+  defaults = await api('/api/settings');
+  $('def').value = defaults.defaultDescription; 
+  $('style').value = defaults.style;
+  platforms = await api('/api/platforms');
+  
+  $('platforms').innerHTML = platforms.map(p => `
+    <div class="card-compact">
+      <strong>${p.name}</strong>
+      <p class="status" style="margin:8px 0">
+        ${p.manual ? '✋ Manual: Post in-app' : p.connected ? '✅ Connected' : p.configured ? '⚠️ Not connected' : '❌ Add API keys'}
+      </p>
+      ${p.manual ? '' : p.connected ? `<button class="alt" style="width:100%;margin-top:8px" data-off="${p.key}">🔗 Disconnect</button>` : `<button class="alt" ${p.configured ? '' : 'disabled'} style="width:100%;margin-top:8px" data-on="${p.key}">🔗 Connect</button>`}
+    </div>
+  `).join('');
+  
+  $('picks').innerHTML = platforms.filter(p => p.connected || p.manual).map(p => `
+    <label><input type="checkbox" value="${p.key}" checked> ${p.name}</label>
+  `).join('') || '<span class="status">Connect an account first.</span>';
+  
+  restoreFormData();
+}
+
+$('platforms').addEventListener('click', async e => {
+  if (e.target.dataset.on) location.href = '/auth/' + e.target.dataset.on;
+  if (e.target.dataset.off) { 
+    await api('/api/disconnect/' + e.target.dataset.off, { method: 'POST' }); 
+    load(); 
+  }
+});
+
+$('save').onclick = async () => {
+  await api('/api/settings', { method: 'POST', headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({ defaultDescription: $('def').value, style: $('style').value }) });
+  defaults = { defaultDescription: $('def').value, style: $('style').value };
+  say('✅ Settings saved!', 'success');
+};
+
+$('save-advanced').onclick = async () => {
+  say('✅ Advanced settings saved!', 'success');
+};
+
+$('gen').onclick = async () => {
+  if (!$('topic').value.trim()) return say('Please describe the video first', 'error');
+  $('gen').disabled = true;
+  say('✨ Generating with AI...', 'info');
+  const r = await api('/api/generate', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ topic: $('topic').value }) });
+  $('gen').disabled = false;
+  if (r.error) return say('⚠️ AI error: ' + r.error, 'error');
+  $('title').value = r.title;
+  $('desc').value = [r.description, defaults.defaultDescription].filter(Boolean).join('\n\n');
+  updateCharCount();
+  say('✅ Generated!', 'success');
+  saveFormData();
+};
+
+$('schedule').addEventListener('change', () => {
+  const scheduledTime = $('schedule').value;
+  const scheduleInfo = $('schedule-info');
+  
+  if (scheduledTime) {
+    const date = new Date(scheduledTime);
+    $('scheduled-time').textContent = date.toLocaleString();
+    scheduleInfo.hidden = false;
+    
+    // Validate it's in the future
+    if (date <= new Date()) {
+      say('⚠️ Scheduled time must be in the future', 'warning');
+      $('schedule').value = '';
+      scheduleInfo.hidden = true;
+    }
+  } else {
+    scheduleInfo.hidden = true;
+  }
+  saveFormData();
+});
+
+$('schedule-btn').onclick = async () => {
+  const f = videoInput.files[0], chosen = [...$$('#picks input:checked')].map(i => i.value);
+  const scheduledTime = $('schedule').value;
+  
+  if (!f) return say('📹 Please select a video', 'error');
+  if (!chosen.length) return say('🎯 Select at least one platform', 'error');
+  if (!scheduledTime) return say('📅 Pick a date and time to schedule', 'error');
+  
+  const scheduledDate = new Date(scheduledTime);
+  if (scheduledDate <= new Date()) return say('⚠️ Scheduled time must be in the future', 'error');
+  
+  $('schedule-btn').disabled = true;
+  say('📅 Scheduling post...', 'info');
+  
+  const progressDiv = $('upload-progress');
+  const progressFill = $('progress-fill');
+  const progressPercent = $('progress-percent');
+  progressDiv.hidden = false;
+  
+  try {
+    // Upload video
+    const fd = new FormData();
+    fd.append('video', f);
+    
+    const xhr = new XMLHttpRequest();
+    xhr.upload.addEventListener('progress', (e) => {
+      if (e.lengthComputable) {
+        const percentComplete = (e.loaded / e.total) * 100;
+        progressFill.style.width = percentComplete + '%';
+        progressPercent.textContent = Math.round(percentComplete);
+      }
+    });
+    
+    const uploadPromise = new Promise((resolve, reject) => {
+      xhr.addEventListener('load', () => {
+        if (xhr.status === 200) {
+          try {
+            resolve(JSON.parse(xhr.responseText));
+          } catch (e) {
+            reject(new Error('Invalid response'));
+          }
+        } else {
+          reject(new Error('Upload failed'));
+        }
+      });
+      xhr.addEventListener('error', () => reject(new Error('Upload failed')));
+      xhr.open('POST', '/api/upload');
+      xhr.send(fd);
+    });
+    
+    const up = await uploadPromise;
+    progressDiv.hidden = true;
+    
+    if (up.error) {
+      $('schedule-btn').disabled = false;
+      return say('❌ ' + up.error, 'error');
+    }
+    
+    say('📅 Scheduling post for ' + scheduledDate.toLocaleString() + '...', 'info');
+    
+    // Schedule the post
+    const res = await api('/api/publish', { 
+      method: 'POST', 
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ 
+        file: up.file, 
+        title: $('title').value, 
+        description: $('desc').value, 
+        platforms: chosen,
+        scheduled_at: scheduledTime
+      }) 
+    });
+    
+    if (res.scheduled) {
+      say('✅ Post scheduled!\n🕐 Will post on ' + scheduledDate.toLocaleString() + '\n📱 Platforms: ' + chosen.join(', '), 'success');
+      localStorage.removeItem('postForm');
+      videoInput.value = '';
+      $('video-preview').hidden = true;
+      $('schedule').value = '';
+      $('schedule-info').hidden = true;
+      
+      // Reset form
+      $('topic').value = '';
+      $('title').value = '';
+      $('desc').value = '';
+      updateCharCount();
+    } else {
+      const results = Object.entries(res).map(([k, v]) => 
+        `${k}: ${v.ok ? '✅ ' + (v.note || 'Posted') : '❌ ' + v.error}${v.url ? '\n🔗 ' + v.url : ''}`
+      ).join('\n');
+      say('🎉 Done!\n' + results, 'success');
+    }
+    
+    $('schedule-btn').disabled = false;
+  } catch (e) {
+    say('❌ ' + e.message, 'error');
+    $('schedule-btn').disabled = false;
+    progressDiv.hidden = true;
+  }
+};
+
+$('save-draft').onclick = () => {
+  saveFormData();
+  say('✅ Draft saved locally', 'success');
+};
+
+$('publish').onclick = async () => {
+  const f = videoInput.files[0], chosen = [...$$('#picks input:checked')].map(i => i.value);
+  if (!f) return say('📹 Please select a video', 'error');
+  if (!chosen.length) return say('🎯 Select at least one platform', 'error');
+  
+  $('publish').disabled = true;
+  say('📤 Uploading video...', 'info');
+  notifications.show('Starting upload...', 'info', '📤 Upload Started');
+  
+  const progressDiv = $('upload-progress');
+  const progressFill = $('progress-fill');
+  const progressPercent = $('progress-percent');
+  progressDiv.hidden = false;
+  
+  try {
+    // Create FormData
+    const fd = new FormData();
+    fd.append('video', f);
+    
+    // Upload with progress tracking
+    const xhr = new XMLHttpRequest();
+    
+    xhr.upload.addEventListener('progress', (e) => {
+      if (e.lengthComputable) {
+        const percentComplete = (e.loaded / e.total) * 100;
+        progressFill.style.width = percentComplete + '%';
+        progressPercent.textContent = Math.round(percentComplete);
+      }
+    });
+    
+    const uploadPromise = new Promise((resolve, reject) => {
+      xhr.addEventListener('load', () => {
+        if (xhr.status === 200) {
+          try {
+            resolve(JSON.parse(xhr.responseText));
+          } catch (e) {
+            reject(new Error('Invalid response'));
+          }
+        } else {
+          reject(new Error('Upload failed'));
+        }
+      });
+      xhr.addEventListener('error', () => reject(new Error('Upload failed')));
+      xhr.open('POST', '/api/upload');
+      xhr.send(fd);
+    });
+    
+    const up = await uploadPromise;
+    progressDiv.hidden = true;
+    notifications.show('Upload complete!', 'success', '✅ Video Uploaded');
+    
+    if (up.error) {
+      $('publish').disabled = false;
+      return say('❌ ' + up.error, 'error');
+    }
+    
+    say('📮 Posting to platforms...', 'info');
+    notifications.show('Posting to ' + chosen.length + ' platform(s)...', 'info', '📮 Publishing');
+    
+    const res = await api('/api/publish', { method: 'POST', headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ file: up.file, title: $('title').value, description: $('desc').value, platforms: chosen }) });
+    
+    const results = Object.entries(res).map(([k, v]) => 
+      `${k}: ${v.ok ? '✅ ' + (v.note || 'Posted') : '❌ ' + v.error}${v.url ? '\n🔗 ' + v.url : ''}`
+    ).join('\n');
+    
+    say('🎉 Done!\n' + results, 'success');
+    notifications.show('Posted to ' + Object.entries(res).filter(([k, v]) => v.ok).length + ' platform(s)', 'success', '🎉 Published Successfully');
+    
+    $('publish').disabled = false;
+    localStorage.removeItem('postForm');
+    videoInput.value = '';
+    $('video-preview').hidden = true;
+  } catch (e) {
+    say('❌ ' + e.message, 'error');
+    notifications.show(e.message, 'error', '❌ Upload Failed');
+    $('publish').disabled = false;
+    progressDiv.hidden = true;
+  }
+};
+
+// Navigation
+function show(v) {
+  $('view-post').hidden = v !== 'post';
+  $('view-batch').hidden = v !== 'batch';
+  $('view-history').hidden = v !== 'history';
+  $('view-earn').hidden = v !== 'earn';
+  $$('nav button').forEach(b => b.classList.toggle('cur', b.dataset.v === v));
+  if (v === 'earn') loadEarn();
+  if (v === 'history') loadHistory();
+  if (v === 'batch') loadBatchUI();
+}
+document.querySelector('nav').onclick = e => e.target.dataset.v && show(e.target.dataset.v);
+
+// Batch Upload
+let batchFiles = [];
+
+function loadBatchUI() {
+  $('batch-picks').innerHTML = platforms.filter(p => p.connected || p.manual).map(p => `
+    <label><input type="checkbox" value="${p.key}" checked> ${p.name}</label>
+  `).join('') || '<span class="status">Connect an account first.</span>';
+}
+
+const batchUploadZone = $('batch-upload-zone');
+const batchInput = $('batch-videos');
+
+['dragover', 'dragenter'].forEach(event => {
+  batchUploadZone.addEventListener(event, (e) => {
+    e.preventDefault();
+    batchUploadZone.classList.add('active');
+  });
+});
+
+['dragleave', 'drop'].forEach(event => {
+  batchUploadZone.addEventListener(event, () => batchUploadZone.classList.remove('active'));
+});
+
+batchUploadZone.addEventListener('drop', (e) => {
+  e.preventDefault();
+  if (e.dataTransfer.files.length) {
+    batchInput.files = e.dataTransfer.files;
+    handleBatchSelect();
+  }
+});
+
+batchUploadZone.addEventListener('click', () => batchInput.click());
+batchInput.addEventListener('change', handleBatchSelect);
+
+function handleBatchSelect() {
+  batchFiles = Array.from(batchInput.files);
+  $('batch-count').textContent = batchFiles.length;
+  
+  const list = $('batch-list');
+  list.innerHTML = batchFiles.map((f, i) => `
+    <div class="card-compact" style="background:var(--surface);display:flex;justify-content:space-between;align-items:center">
+      <div style="flex:1;overflow:hidden">
+        <p style="margin:0;font-weight:600;font-size:.95rem;overflow:hidden;text-overflow:ellipsis">${f.name}</p>
+        <p class="status">${(f.size / (1024 * 1024)).toFixed(1)}MB</p>
+      </div>
+      <button class="alt" style="padding:6px 12px" onclick="removeBatchFile(${i})">❌</button>
+    </div>
+  `).join('');
+  
+  $('batch-files').hidden = false;
+}
+
+function removeBatchFile(i) {
+  batchFiles.splice(i, 1);
+  if (batchFiles.length === 0) {
+    batchInput.value = '';
+    $('batch-files').hidden = true;
+  }
+  handleBatchSelect();
+}
+
+$('batch-clear').onclick = () => {
+  batchFiles = [];
+  batchInput.value = '';
+  $('batch-files').hidden = true;
+  $('batch-topic').value = '';
+  $('batch-title-template').value = '';
+  $('batch-desc').value = '';
+  $('batch-schedule').value = '';
+  say('Batch cleared', 'info');
+};
+
+$('batch-gen').onclick = async () => {
+  if (!$('batch-topic').value.trim()) return say('Describe the videos first', 'error');
+  if (!batchFiles.length) return say('Select videos first', 'error');
+  
+  $('batch-gen').disabled = true;
+  say('✨ Generating titles for ' + batchFiles.length + ' videos...', 'info');
+  
+  try {
+    const r = await api('/api/generate', { 
+      method: 'POST', 
+      headers: { 'content-type': 'application/json' }, 
+      body: JSON.stringify({ topic: $('batch-topic').value, count: batchFiles.length }) 
+    });
+    
+    $('batch-gen').disabled = false;
+    
+    if (r.error) return say('AI error: ' + r.error, 'error');
+    
+    if (r.titles && Array.isArray(r.titles)) {
+      $('batch-title-template').value = '${titles}'; // Indicates titles were generated
+      $('batch-title-template').dataset.titles = JSON.stringify(r.titles);
+      say('✅ Generated ' + r.titles.length + ' titles!', 'success');
+    } else {
+      $('batch-title-template').value = r.title || 'Video';
+      say('✅ Generated base title', 'success');
+    }
+  } catch (e) {
+    $('batch-gen').disabled = false;
+    say('❌ ' + e.message, 'error');
+  }
+};
+
+$('batch-publish').onclick = async () => {
+  if (!batchFiles.length) return say('Select videos first', 'error');
+  
+  const chosen = [...$$('#batch-picks input:checked')].map(i => i.value);
+  if (!chosen.length) return say('Select at least one platform', 'error');
+  
+  $('batch-publish').disabled = true;
+  $('batch-progress').hidden = false;
+  $('batch-current').textContent = '0';
+  $('batch-total').textContent = batchFiles.length;
+  
+  notifications.show('Starting batch upload of ' + batchFiles.length + ' video(s)', 'info', '📦 Batch Upload Started');
+  
+  const results = [];
+  const titleTemplate = $('batch-title-template').value;
+  const generatedTitles = $('batch-title-template').dataset.titles ? JSON.parse($('batch-title-template').dataset.titles) : [];
+  const strategy = $('batch-strategy').value;
+  const baseSchedule = $('batch-schedule').value;
+  const desc = $('batch-desc').value;
+  
+  for (let i = 0; i < batchFiles.length; i++) {
+    try {
+      say(`Publishing ${i + 1}/${batchFiles.length}...`, 'info');
+      $('batch-current').textContent = i + 1;
+      $('batch-progress-fill').style.width = ((i + 1) / batchFiles.length * 100) + '%';
+      notifications.show(`Processing ${i + 1}/${batchFiles.length}...`, 'info', '📤 Uploading');
+      
+      const file = batchFiles[i];
+      const fd = new FormData();
+      fd.append('video', file);
+      
+      const up = await api('/api/upload', { method: 'POST', body: fd });
+      if (up.error) throw new Error(up.error);
+      
+      // Generate title for this video
+      let title = titleTemplate || 'Video ' + (i + 1);
+      if (generatedTitles[i]) title = generatedTitles[i];
+      else if (titleTemplate.includes('{n}')) title = titleTemplate.replace('{n}', i + 1);
+      
+      // Calculate scheduled time if staggered
+      let scheduledTime = null;
+      if (baseSchedule) {
+        const baseDate = new Date(baseSchedule);
+        if (strategy === 'staggered-30min') baseDate.setMinutes(baseDate.getMinutes() + i * 30);
+        else if (strategy === 'staggered-1hour') baseDate.setHours(baseDate.getHours() + i);
+        else if (strategy === 'staggered-daily') baseDate.setDate(baseDate.getDate() + i);
+        scheduledTime = baseDate.toISOString().slice(0, 16);
+      }
+      
+      const res = await api('/api/publish', { 
+        method: 'POST', 
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ 
+          file: up.file, 
+          title: title, 
+          description: desc, 
+          platforms: chosen,
+          scheduled_at: scheduledTime
+        }) 
+      });
+      
+      const status = res.scheduled ? '📅 Scheduled' : (Object.entries(res).some(([k, v]) => v.ok) ? '✅ Posted' : '❌ Failed');
+      results.push({ file: file.name, title: title, status });
+      
+      notifications.show(file.name + ': ' + status, status.includes('✅') ? 'success' : status.includes('📅') ? 'info' : 'error', '📹 Video');
+      
+    } catch (e) {
+      results.push({ file: batchFiles[i].name, status: '❌ ' + e.message });
+      notifications.show(batchFiles[i].name + ': ' + e.message, 'error', '❌ Error');
+    }
+  }
+  
+  const resultsHtml = results.map(r => 
+    `<div style="padding:8px;border-bottom:1px solid var(--line)"><strong>${r.file}</strong><br><span class="status">${r.title}</span><br><span style="color:${r.status.includes('✅') || r.status.includes('📅') ? 'var(--ok)' : 'var(--bad)'}">${r.status}</span></div>`
+  ).join('');
+  
+  $('batch-results').innerHTML = resultsHtml;
+  say('🎉 Batch upload complete!', 'success');
+  notifications.show('Batch upload completed! ' + results.filter(r => r.status.includes('✅')).length + ' successful', 'success', '✅ Batch Complete');
+  $('batch-publish').disabled = false;
+};
+
+// History
+let allPosts = [];
+let currentHistoryTab = 'all';
+
+async function loadHistory() {
+  try {
+    allPosts = await api('/api/posts');
+  } catch (e) {
+    allPosts = [];
+  }
+  filterAndDisplayHistory();
+}
+
+function filterAndDisplayHistory() {
+  const searchTerm = $('history-search').value.toLowerCase();
+  let filtered = allPosts;
+  
+  if (currentHistoryTab !== 'all') {
+    filtered = filtered.filter(p => p.status === currentHistoryTab);
+  }
+  
+  if (searchTerm) {
+    filtered = filtered.filter(p => 
+      p.title?.toLowerCase().includes(searchTerm) ||
+      p.description?.toLowerCase().includes(searchTerm)
+    );
+  }
+  
+  const container = $('history-container');
+  
+  if (!filtered.length) {
+    container.innerHTML = '<p class="status">No posts found</p>';
+    return;
+  }
+  
+  container.innerHTML = filtered.map(post => {
+    const createdDate = new Date(post.created_at);
+    const scheduledDate = post.scheduled_at ? new Date(post.scheduled_at) : null;
+    let statusBadge = '';
+    
+    switch(post.status) {
+      case 'scheduled':
+        statusBadge = '📅 Scheduled for ' + scheduledDate?.toLocaleString();
+        break;
+      case 'published':
+        statusBadge = '✅ Published on ' + createdDate.toLocaleString();
+        break;
+      case 'draft':
+        statusBadge = '📝 Draft';
+        break;
+      case 'failed':
+        statusBadge = '❌ Failed: ' + (post.error || 'Unknown error');
+        break;
+      default:
+        statusBadge = post.status;
+    }
+    
+    const platformBadges = post.platforms.map(p => 
+      `<span class="badge">${p}</span>`
+    ).join('');
+    
+    return `
+      <div class="card-compact" style="background:var(--surface)">
+        <div style="display:flex;justify-content:space-between;align-items:start;gap:12px;margin-bottom:12px">
+          <div style="flex:1;overflow:hidden">
+            <h3 style="margin:0 0 4px;font-size:1rem;overflow:hidden;text-overflow:ellipsis">${esc(post.title || '(Untitled)')}</h3>
+            <p class="status" style="margin:0">${statusBadge}</p>
+          </div>
+          <div style="display:flex;gap:4px;flex-wrap:wrap;justify-content:flex-end">
+            ${post.status === 'scheduled' ? `<button class="alt" style="padding:6px 12px;font-size:.85rem" onclick="editPost('${post.id}')">✏️ Edit</button>` : ''}
+            ${post.status === 'draft' ? `<button class="alt" style="padding:6px 12px;font-size:.85rem" onclick="repostDraft('${post.id}')">📤 Repost</button>` : ''}
+            <button class="alt" style="padding:6px 12px;font-size:.85rem" onclick="deletePost('${post.id}')">🗑️ Delete</button>
+          </div>
+        </div>
+        
+        ${post.description ? `<p class="status" style="margin:8px 0">${esc(post.description.slice(0, 150))}${post.description.length > 150 ? '...' : ''}</p>` : ''}
+        
+        <div style="display:flex;gap:6px;flex-wrap:wrap;margin:8px 0">
+          ${platformBadges}
+        </div>
+        
+        ${post.status === 'published' && post.engagement && Object.keys(post.engagement).length ? `
+          <div style="margin-top:8px;padding-top:8px;border-top:1px solid var(--line)">
+            <p class="status" style="margin:0 0 6px">Engagement:</p>
+            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(100px,1fr));gap:6px">
+              ${Object.entries(post.engagement).map(([k, v]) => 
+                `<div style="background:var(--bg);padding:6px;border-radius:6px;text-align:center;font-size:.85rem">
+                  <p style="margin:0;color:var(--muted)">${k}</p>
+                  <p style="margin:4px 0 0;font-weight:600">${v.status || 'tracking'}</p>
+                </div>`
+              ).join('')}
+            </div>
+          </div>
+        ` : ''}
+      </div>
+    `;
+  }).join('');
+}
+
+$$('.tab').forEach(tab => {
+  tab.addEventListener('click', () => {
+    const tabName = tab.dataset.tab;
+    currentHistoryTab = tabName;
+    $$('.tab').forEach(t => t.classList.toggle('active', t === tab));
+    filterAndDisplayHistory();
+  });
+});
+
+$('history-search').addEventListener('input', filterAndDisplayHistory);
+$('history-refresh').addEventListener('click', async () => {
+  say('🔄 Refreshing history...', 'info');
+  await loadHistory();
+  say('✅ Refreshed', 'success');
+});
+
+async function deletePost(id) {
+  if (!confirm('Are you sure you want to delete this post?')) return;
+  
+  try {
+    await api('/api/posts/' + id + '/delete', { method: 'POST' });
+    say('✅ Post deleted', 'success');
+    await loadHistory();
+  } catch (e) {
+    say('❌ Failed to delete: ' + e.message, 'error');
+  }
+}
+
+async function editPost(id) {
+  const post = allPosts.find(p => p.id === id);
+  if (!post) return say('Post not found', 'error');
+  
+  if (post.status === 'scheduled') {
+    const newTime = prompt('New schedule time (ISO format):', post.scheduled_at);
+    if (!newTime) return;
+    
+    try {
+      await api('/api/posts/' + id + '/reschedule', { 
+        method: 'POST', 
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ scheduled_at: newTime })
+      });
+      say('✅ Post rescheduled', 'success');
+      await loadHistory();
+    } catch (e) {
+      say('❌ Failed to reschedule: ' + e.message, 'error');
+    }
+  }
+}
+
+async function repostDraft(id) {
+  const post = allPosts.find(p => p.id === id);
+  if (!post) return say('Post not found', 'error');
+  
+  // Load draft data into form
+  $('topic').value = post.title?.split(':')[0] || '';
+  $('title').value = post.title || '';
+  $('desc').value = post.description || '';
+  
+  // Select platforms
+  $$('#picks input').forEach(checkbox => {
+    checkbox.checked = post.platforms.includes(checkbox.value);
+  });
+  
+  saveFormData();
+  show('post');
+  say('✅ Draft loaded! Click Publish to repost', 'success');
+}
+
+// Analytics
+const REQS = [
+  { key: 'tiktok', name: 'TikTok: Creator Rewards Program', goal: 10000, goalLabel: 'followers', rules: [
+    '18 or older, 10,000 followers, and 100,000 video views in the last 30 days',
+    'A personal account in good standing (Business accounts don\'t qualify)',
+    'Only original videos longer than 1 minute earn, so short clips don\'t count',
+    'Only available in some countries, including the US, UK, Canada, Mexico, Brazil, France and Germany'] },
+  { key: 'instagram', name: 'Instagram', goal: 10000, goalLabel: 'followers', rules: [
+    'Gifts on Reels: 500 followers, professional account, 18+, eligible country',
+    'Subscriptions and Live Badges: 10,000 followers, professional account, 18+',
+    'Bonuses: invite-only, and Instagram picks who gets them',
+    'Guides disagree on ad revenue on Reels (some say 10,000 followers plus 600,000 minutes viewed in 60 days). Check Professional dashboard > Monetization.'] },
+  { key: 'youtube', name: 'YouTube Shorts: Partner Program', goal: 1000, goalLabel: 'subscribers', rules: [
+    'Fan funding (memberships, Super Thanks): 500 subscribers, 3 public uploads in 90 days, and 3 million Shorts views in 90 days (or 3,000 watch hours)',
+    'Shorts ad revenue: 1,000 subscribers and 10 million Shorts views in 90 days (or 4,000 watch hours from long videos)',
+    'Shorts ad money is pooled, and creators get 45% of what\'s left after music costs, split by share of views',
+    'From February 1, 2027, new applicants need 20 million Shorts views (or 8,000 watch hours). One source says existing channels will also need 10 million Shorts views per 90 days to keep earning from Shorts, so confirm in YouTube Help.'] },
+  { key: 'snapchat', name: 'Snapchat: Unified Monetization Program', goal: 50000, goalLabel: 'followers', rules: [
+    '50,000 followers and at least 25 posts a month to Spotlight or Saved Stories',
+    'Posted on at least 10 of the last 28 days',
+    'Plus one of: 10 million Snap views, 1 million Spotlight views, or 12,000 hours of view time in 28 days',
+    'Spotlight videos must be over 1 minute to earn. The program is invite-only.'] },
+  { key: 'facebook', name: 'Facebook Reels: Content Monetization', rules: [
+    'Invite-only, and Facebook doesn\'t publish exact numbers. Guides report anywhere from 5,000 to 10,000 followers.',
+    '18+, eligible country, Professional mode on, and original content in good standing',
+    'Stars (fan tips) need only 500 followers for 30 days',
+    'Posting to Facebook isn\'t built into Postcast yet'] },
+];
+
+async function loadEarn() {
+  const a = await api('/api/analytics'), byKey = {};
+  
+  // Calculate totals
+  let totalFollowers = 0, totalVideos = 0, totalViews = 0;
+  const platformData = {};
+  
+  ['tiktok', 'instagram', 'youtube'].forEach(k => {
+    const name = REQS.find(r => r.key === k).name.split(':')[0];
+    const d = a[k];
+    if (d && !d.error) {
+      totalFollowers += d.followers || 0;
+      totalVideos += d.videos || 0;
+      totalViews += d.totalViews || 0;
+      platformData[k] = { name, data: d };
+    }
+  });
+  
+  // Update main stats
+  $('stat-followers').textContent = fmt(totalFollowers);
+  $('stat-videos').textContent = fmt(totalVideos);
+  $('stat-views').textContent = fmt(totalViews);
+  
+  // Calculate engagement rate
+  const totalEngagement = Object.values(platformData).reduce((sum, p) => {
+    const likes = (p.data.recent || []).reduce((s, v) => s + (v.likes || 0), 0);
+    const comments = (p.data.recent || []).reduce((s, v) => s + (v.comments || 0), 0);
+    return sum + likes + comments;
+  }, 0);
+  const engagementRate = totalViews > 0 ? ((totalEngagement / totalViews) * 100).toFixed(2) : 0;
+  $('stat-engagement').textContent = engagementRate + '%';
+  
+  // Platform breakdown
+  const breakdownHtml = Object.entries(platformData).map(([k, p]) => `
+    <div style="padding:8px;background:var(--bg);border-radius:6px">
+      <div style="display:flex;justify-content:space-between;margin-bottom:6px">
+        <strong>${p.name}</strong>
+        <span class="badge">${fmt(p.data.followers)} followers</span>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px;font-size:.85rem">
+        <div><p class="status" style="margin:0">Videos</p><p style="margin:2px 0;font-weight:600">${fmt(p.data.videos)}</p></div>
+        <div><p class="status" style="margin:0">Views</p><p style="margin:2px 0;font-weight:600">${fmt(p.data.totalViews || 0)}</p></div>
+        <div><p class="status" style="margin:0">Recent</p><p style="margin:2px 0;font-weight:600">${p.data.recent?.length || 0}</p></div>
+      </div>
+    </div>
+  `).join('');
+  $('platform-breakdown').innerHTML = breakdownHtml;
+  
+  // Top performing videos
+  const allRecentVideos = [];
+  Object.values(platformData).forEach(p => {
+    (p.data.recent || []).forEach(v => {
+      allRecentVideos.push({ ...v, platform: p.name });
+    });
+  });
+  
+  const topVideos = allRecentVideos
+    .sort((a, b) => (b.likes || 0) + (b.comments || 0) - ((a.likes || 0) + (a.comments || 0)))
+    .slice(0, 5);
+  
+  const topVideosHtml = topVideos.map(v => `
+    <div style="padding:8px;background:var(--bg);border-radius:6px;border-left:3px solid var(--accent)">
+      <p style="margin:0;font-weight:600;overflow:hidden;text-overflow:ellipsis">${esc(v.title || '(no title)')}</p>
+      <p class="status" style="margin:4px 0 0">${v.platform}</p>
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-top:6px;font-size:.8rem">
+        <div><span class="status">👁️</span> ${fmt(v.views || 0)}</div>
+        <div><span class="status">❤️</span> ${fmt(v.likes || 0)}</div>
+        <div><span class="status">💬</span> ${fmt(v.comments || 0)}</div>
+      </div>
+    </div>
+  `).join('') || '<p class="status">No recent videos</p>';
+  $('top-videos').innerHTML = topVideosHtml;
+  
+  // Detailed stats
+  const detailedHtml = ['tiktok', 'instagram', 'youtube'].map(k => {
+    const name = REQS.find(r => r.key === k).name.split(':')[0];
+    const d = a[k];
+    if (!d) return `<h3>${name}</h3><p class="status">Not connected.</p>`;
+    if (d.error) return `<h3>${name}</h3><p class="status off">⚠️ ${esc(d.error)}</p>`;
+    
+    const rows = (d.recent || []).map(v => `
+      <tr>
+        <td>${esc(v.title || '(no title)')}</td>
+        <td>${fmt(v.views)}</td>
+        <td>${fmt(v.likes)}</td>
+        <td>${fmt(v.comments)}</td>
+      </tr>
+    `).join('');
+    
+    return `
+      <h3>${name}</h3>
+      <p class="status">${fmt(d.followers)} followers • ${fmt(d.videos)} videos${d.totalViews != null ? ' • ' + fmt(d.totalViews) + ' total views' : ''}</p>
+      ${rows ? `<div class="tbl"><table><tr><th>Recent</th><th>Views</th><th>Likes</th><th>Comments</th></tr>${rows}</table></div>` : ''}
+    `;
+  }).join('');
+  $('detailed-stats').innerHTML = detailedHtml;
+  
+  // Charts (if Chart.js is available)
+  if (typeof Chart !== 'undefined') {
+    setTimeout(() => renderCharts(platformData), 100);
+  }
+  
+  // Monetization requirements
+  REQS.forEach(r => byKey[r.key] = a[r.key]);
+  $('reqs').innerHTML = REQS.map(r => {
+    const f = byKey[r.key]?.followers, pct = r.goal && f != null ? Math.min(100, Math.round(f / r.goal * 100)) : null;
+    return `<h3>${r.name}</h3>` + (pct != null ? `<div class="bar"><i style="width:${pct}%"></i></div><div class="status">${fmt(f)} of ${fmt(r.goal)} ${r.goalLabel}</div>` : '') +
+      `<ul>${r.rules.map(x => `<li>${esc(x)}</li>`).join('')}</ul>`;
+  }).join('');
+}
+
+// Chart rendering
+let charts = {};
+
+function renderCharts(platformData) {
+  const chartConfig = {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+      legend: {
+        labels: { color: getComputedStyle(document.documentElement).getPropertyValue('--ink').trim() }
+      }
+    },
+    scales: {
+      y: { ticks: { color: getComputedStyle(document.documentElement).getPropertyValue('--muted').trim() } },
+      x: { ticks: { color: getComputedStyle(document.documentElement).getPropertyValue('--muted').trim() } }
+    }
+  };
+  
+  // Followers chart
+  const followerCtx = $('followers-chart');
+  if (followerCtx && Chart) {
+    const labels = Object.values(platformData).map(p => p.name);
+    const data = Object.values(platformData).map(p => p.data.followers || 0);
+    
+    if (charts.followers) charts.followers.destroy();
+    charts.followers = new Chart(followerCtx, {
+      type: 'bar',
+      data: {
+        labels,
+        datasets: [{
+          label: 'Followers',
+          data,
+          backgroundColor: 'rgba(59, 130, 246, 0.6)',
+          borderColor: 'rgba(59, 130, 246, 1)',
+          borderWidth: 1
+        }]
+      },
+      options: chartConfig
+    });
+  }
+  
+  // Views chart
+  const viewsCtx = $('views-chart');
+  if (viewsCtx && Chart) {
+    const labels = Object.values(platformData).map(p => p.name);
+    const data = Object.values(platformData).map(p => p.data.totalViews || 0);
+    
+    if (charts.views) charts.views.destroy();
+    charts.views = new Chart(viewsCtx, {
+      type: 'doughnut',
+      data: {
+        labels,
+        datasets: [{
+          data,
+          backgroundColor: ['rgba(59, 130, 246, 0.6)', 'rgba(16, 185, 129, 0.6)', 'rgba(245, 158, 11, 0.6)'],
+          borderColor: ['rgba(59, 130, 246, 1)', 'rgba(16, 185, 129, 1)', 'rgba(245, 158, 11, 1)'],
+          borderWidth: 1
+        }]
+      },
+      options: chartConfig
+    });
+  }
+}
+
+load();
+</script>
+</body>
+</html>

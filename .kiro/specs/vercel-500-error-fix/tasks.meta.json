@@ -1,0 +1,124 @@
+{
+  "pbtResults": {
+    "1. Write bug condition exploration test": {
+      "status": "failed",
+      "failingExample": "COUNTEREXAMPLE FOUND (Expected - confirms bug exists):\n\nThe module exports a bare Express app instance:\n- typeof export: 'function' (Express apps are callable)\n- constructor name: 'EventEmitter' \n- has .listen() method: true (Express app characteristic)\n- has .default export: false (MISSING - required for Vercel)\n- Is Vercel compatible: false\n\nThis export pattern causes 500 FUNCTION_INVOCATION_FAILED errors on Vercel because:\n1. The module lacks the `.default` export that Vercel's @vercel/node runtime expects\n2. The bare Express app is exported directly without proper Vercel handler wrapper\n3. While Express apps are technically functions, they need `.default` export for ESM interop\n\nBug confirmed: api/index.js exports `module.exports = app` without `module.exports.default = app`",
+      "lastRunTimestamp": 1790668802769
+    },
+    "3.2 Verify bug condition exploration test now passes": {
+      "status": "passed",
+      "lastRunTimestamp": 1790669386929
+    }
+  },
+  "executionHistory": {
+    "1. Write bug condition exploration test": [
+      {
+        "executionId": "7be184e5-cc31-4e33-9e90-1455011580b8",
+        "chatSessionId": "sess_bad1b9e1-a042-4356-87dd-0ac9ff44b8f0",
+        "timestamp": 1790668291570
+      },
+      {
+        "executionId": "7be184e5-cc31-4e33-9e90-1455011580b8",
+        "chatSessionId": "sess_bad1b9e1-a042-4356-87dd-0ac9ff44b8f0",
+        "timestamp": 1790668301803
+      },
+      {
+        "executionId": "7be184e5-cc31-4e33-9e90-1455011580b8",
+        "chatSessionId": "sess_bad1b9e1-a042-4356-87dd-0ac9ff44b8f0",
+        "timestamp": 1790668823832
+      }
+    ],
+    "2. Write preservation property tests (BEFORE implementing fix)": [
+      {
+        "executionId": "7be184e5-cc31-4e33-9e90-1455011580b8",
+        "chatSessionId": "sess_bad1b9e1-a042-4356-87dd-0ac9ff44b8f0",
+        "timestamp": 1790668291599
+      },
+      {
+        "executionId": "7be184e5-cc31-4e33-9e90-1455011580b8",
+        "chatSessionId": "sess_bad1b9e1-a042-4356-87dd-0ac9ff44b8f0",
+        "timestamp": 1790668828766
+      },
+      {
+        "executionId": "7be184e5-cc31-4e33-9e90-1455011580b8",
+        "chatSessionId": "sess_bad1b9e1-a042-4356-87dd-0ac9ff44b8f0",
+        "timestamp": 1790668961733
+      }
+    ],
+    "3.1 Implement the fix in api/index.js": [
+      {
+        "executionId": "7be184e5-cc31-4e33-9e90-1455011580b8",
+        "chatSessionId": "sess_bad1b9e1-a042-4356-87dd-0ac9ff44b8f0",
+        "timestamp": 1790668291629
+      },
+      {
+        "executionId": "7be184e5-cc31-4e33-9e90-1455011580b8",
+        "chatSessionId": "sess_bad1b9e1-a042-4356-87dd-0ac9ff44b8f0",
+        "timestamp": 1790668968687
+      },
+      {
+        "executionId": "7be184e5-cc31-4e33-9e90-1455011580b8",
+        "chatSessionId": "sess_bad1b9e1-a042-4356-87dd-0ac9ff44b8f0",
+        "timestamp": 1790669359968
+      }
+    ],
+    "3.2 Verify bug condition exploration test now passes": [
+      {
+        "executionId": "7be184e5-cc31-4e33-9e90-1455011580b8",
+        "chatSessionId": "sess_bad1b9e1-a042-4356-87dd-0ac9ff44b8f0",
+        "timestamp": 1790668291678
+      },
+      {
+        "executionId": "7be184e5-cc31-4e33-9e90-1455011580b8",
+        "chatSessionId": "sess_bad1b9e1-a042-4356-87dd-0ac9ff44b8f0",
+        "timestamp": 1790669365251
+      },
+      {
+        "executionId": "7be184e5-cc31-4e33-9e90-1455011580b8",
+        "chatSessionId": "sess_bad1b9e1-a042-4356-87dd-0ac9ff44b8f0",
+        "timestamp": 1790669400524
+      }
+    ],
+    "3.3 Verify preservation tests still pass": [
+      {
+        "executionId": "7be184e5-cc31-4e33-9e90-1455011580b8",
+        "chatSessionId": "sess_bad1b9e1-a042-4356-87dd-0ac9ff44b8f0",
+        "timestamp": 1790668291705
+      },
+      {
+        "executionId": "7be184e5-cc31-4e33-9e90-1455011580b8",
+        "chatSessionId": "sess_bad1b9e1-a042-4356-87dd-0ac9ff44b8f0",
+        "timestamp": 1790669410580
+      },
+      {
+        "executionId": "7be184e5-cc31-4e33-9e90-1455011580b8",
+        "chatSessionId": "sess_bad1b9e1-a042-4356-87dd-0ac9ff44b8f0",
+        "timestamp": 1790669525239
+      }
+    ],
+    "4. Checkpoint - Ensure all tests pass": [
+      {
+        "executionId": "7be184e5-cc31-4e33-9e90-1455011580b8",
+        "chatSessionId": "sess_bad1b9e1-a042-4356-87dd-0ac9ff44b8f0",
+        "timestamp": 1790668291732
+      },
+      {
+        "executionId": "7be184e5-cc31-4e33-9e90-1455011580b8",
+        "chatSessionId": "sess_bad1b9e1-a042-4356-87dd-0ac9ff44b8f0",
+        "timestamp": 1790669531480
+      },
+      {
+        "executionId": "7be184e5-cc31-4e33-9e90-1455011580b8",
+        "chatSessionId": "sess_bad1b9e1-a042-4356-87dd-0ac9ff44b8f0",
+        "timestamp": 1790669538427
+      }
+    ],
+    "3. Fix for Vercel 500 error by exporting handler function": [
+      {
+        "executionId": "7be184e5-cc31-4e33-9e90-1455011580b8",
+        "chatSessionId": "sess_bad1b9e1-a042-4356-87dd-0ac9ff44b8f0",
+        "timestamp": 1790669525257
+      }
+    ]
+  }
+}

@@ -144,11 +144,17 @@ app.get('/api/health', (req, res) => res.json({ ok: true }));
 
 // Serve index.html
 app.get('*', (req, res) => {
-  const p = path.join(__dirname, '../public/index.html');
-  if (fs.existsSync(p)) {
-    res.sendFile(p);
-  } else {
-    res.send('<!DOCTYPE html><html><head><title>Postcast</title></head><body><h1>Postcast</h1></body></html>');
+  try {
+    const p = path.join(__dirname, '../public/index.html');
+    if (fs.existsSync(p)) {
+      const html = fs.readFileSync(p, 'utf-8');
+      res.type('text/html').send(html);
+    } else {
+      res.type('text/html').send('<!DOCTYPE html><html><head><title>Postcast</title></head><body><h1>Postcast</h1><p>App ready</p></body></html>');
+    }
+  } catch (e) {
+    console.error('Error serving index:', e);
+    res.type('text/html').send('<!DOCTYPE html><html><head><title>Postcast</title></head><body><h1>Postcast</h1></body></html>');
   }
 });
 

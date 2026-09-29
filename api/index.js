@@ -243,7 +243,7 @@ app.get('*', (req, res) => {
   if (fs.existsSync(indexPath)) {
     res.sendFile(indexPath);
   } else {
-    res.status(200).send('<!DOCTYPE html><html><head><title>Postcast</title></head><body><h1>Postcast</h1><p>Loading...</p><script>setTimeout(() => location.reload(), 2000);</script></body></html>');
+    res.status(200).send('<!DOCTYPE html><html><head><title>Postcast</title><style>body{font-family:sans-serif;display:flex;align-items:center;justify-content:center;height:100vh;margin:0;background:#0f172a;color:#f1f5f9}</style></head><body><div><h1>Postcast</h1><p>Initializing...</p></div></body></html>');
   }
 });
 

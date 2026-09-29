@@ -1,3 +1,0 @@
-Fixed Vercel serverless function configuration
-Updated api/index.js and vercel.json
-Ready to redeploy

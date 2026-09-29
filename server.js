@@ -139,27 +139,75 @@ app.get('/api/platforms', async (req, res) => {
     { 
       key: 'youtube', 
       name: 'YouTube Shorts', 
+      icon: '📺',
       configured: !!(process.env.YOUTUBE_CLIENT_ID && process.env.YOUTUBE_CLIENT_SECRET),
-      connected: false 
+      connected: false,
+      monetization: 'High - Partner Program'
     },
     { 
       key: 'tiktok', 
       name: 'TikTok', 
+      icon: '🎵',
       configured: !!(process.env.TIKTOK_CLIENT_KEY && process.env.TIKTOK_CLIENT_SECRET),
-      connected: false 
+      connected: false,
+      monetization: 'Medium - Creator Fund'
     },
     { 
       key: 'instagram', 
-      name: 'Instagram', 
+      name: 'Instagram Reels', 
+      icon: '📸',
       configured: !!(process.env.INSTAGRAM_CLIENT_ID && process.env.INSTAGRAM_CLIENT_SECRET),
-      connected: false 
+      connected: false,
+      monetization: 'Medium - Reels Bonus'
+    },
+    { 
+      key: 'facebook', 
+      name: 'Facebook Reels', 
+      icon: '👥',
+      configured: !!(process.env.FACEBOOK_APP_ID && process.env.FACEBOOK_APP_SECRET),
+      connected: false,
+      monetization: 'Low-Medium - Ad Revenue'
+    },
+    { 
+      key: 'twitter', 
+      name: 'Twitter/X', 
+      icon: '🐦',
+      configured: !!(process.env.TWITTER_CLIENT_ID && process.env.TWITTER_CLIENT_SECRET),
+      connected: false,
+      monetization: 'Medium - Premium Revenue Share'
+    },
+    { 
+      key: 'linkedin', 
+      name: 'LinkedIn', 
+      icon: '💼',
+      configured: !!(process.env.LINKEDIN_CLIENT_ID && process.env.LINKEDIN_CLIENT_SECRET),
+      connected: false,
+      monetization: 'None - B2B Reach'
+    },
+    { 
+      key: 'pinterest', 
+      name: 'Pinterest', 
+      icon: '📌',
+      configured: !!(process.env.PINTEREST_APP_ID && process.env.PINTEREST_APP_SECRET),
+      connected: false,
+      monetization: 'Low - Creator Rewards'
+    },
+    { 
+      key: 'rumble', 
+      name: 'Rumble', 
+      icon: '🎬',
+      configured: !!(process.env.RUMBLE_API_KEY),
+      connected: false,
+      monetization: 'Very High - $0.25-1.50 per 1K views'
     },
     { 
       key: 'snapchat', 
       name: 'Snapchat', 
+      icon: '👻',
       manual: true, 
       configured: false, 
-      connected: false 
+      connected: false,
+      monetization: 'High - Spotlight Fund'
     }
   ];
   
@@ -391,14 +439,108 @@ app.get('/api/oauth/tiktok/connect', (req, res) => {
   const csrfState = crypto.randomBytes(16).toString('hex');
   const redirectUri = `${BASE}/api/oauth/tiktok/callback`;
   
-  // Store state in session (for CSRF protection)
-  // In production, use Redis or database
   const authUrl = `https://www.tiktok.com/v2/auth/authorize/` +
     `?client_key=${process.env.TIKTOK_CLIENT_KEY}` +
     `&scope=user.info.basic,video.upload,video.publish` +
     `&response_type=code` +
     `&redirect_uri=${encodeURIComponent(redirectUri)}` +
     `&state=${csrfState}`;
+  
+  res.redirect(authUrl);
+});
+
+// YouTube OAuth - Start connection
+app.get('/api/oauth/youtube/connect', (req, res) => {
+  if (!process.env.YOUTUBE_CLIENT_ID) {
+    return res.status(400).json({ error: 'YouTube not configured' });
+  }
+  
+  const redirectUri = `${BASE}/api/oauth/youtube/callback`;
+  const scope = 'https://www.googleapis.com/auth/youtube.upload https://www.googleapis.com/auth/youtube.readonly';
+  
+  const authUrl = `https://accounts.google.com/o/oauth2/v2/auth` +
+    `?client_id=${process.env.YOUTUBE_CLIENT_ID}` +
+    `&redirect_uri=${encodeURIComponent(redirectUri)}` +
+    `&response_type=code` +
+    `&scope=${encodeURIComponent(scope)}` +
+    `&access_type=offline` +
+    `&prompt=consent`;
+  
+  res.redirect(authUrl);
+});
+
+// Twitter/X OAuth - Start connection
+app.get('/api/oauth/twitter/connect', (req, res) => {
+  if (!process.env.TWITTER_CLIENT_ID) {
+    return res.status(400).json({ error: 'Twitter not configured' });
+  }
+  
+  const redirectUri = `${BASE}/api/oauth/twitter/callback`;
+  const scope = 'tweet.read tweet.write users.read offline.access';
+  const codeChallenge = crypto.randomBytes(32).toString('base64url');
+  
+  const authUrl = `https://twitter.com/i/oauth2/authorize` +
+    `?client_id=${process.env.TWITTER_CLIENT_ID}` +
+    `&redirect_uri=${encodeURIComponent(redirectUri)}` +
+    `&response_type=code` +
+    `&scope=${encodeURIComponent(scope)}` +
+    `&state=${crypto.randomBytes(16).toString('hex')}` +
+    `&code_challenge=${codeChallenge}` +
+    `&code_challenge_method=plain`;
+  
+  res.redirect(authUrl);
+});
+
+// Facebook OAuth - Start connection
+app.get('/api/oauth/facebook/connect', (req, res) => {
+  if (!process.env.FACEBOOK_APP_ID) {
+    return res.status(400).json({ error: 'Facebook not configured' });
+  }
+  
+  const redirectUri = `${BASE}/api/oauth/facebook/callback`;
+  const scope = 'pages_manage_posts,pages_read_engagement,publish_video';
+  
+  const authUrl = `https://www.facebook.com/v18.0/dialog/oauth` +
+    `?client_id=${process.env.FACEBOOK_APP_ID}` +
+    `&redirect_uri=${encodeURIComponent(redirectUri)}` +
+    `&scope=${encodeURIComponent(scope)}` +
+    `&response_type=code`;
+  
+  res.redirect(authUrl);
+});
+
+// LinkedIn OAuth - Start connection
+app.get('/api/oauth/linkedin/connect', (req, res) => {
+  if (!process.env.LINKEDIN_CLIENT_ID) {
+    return res.status(400).json({ error: 'LinkedIn not configured' });
+  }
+  
+  const redirectUri = `${BASE}/api/oauth/linkedin/callback`;
+  const scope = 'w_member_social r_liteprofile';
+  
+  const authUrl = `https://www.linkedin.com/oauth/v2/authorization` +
+    `?client_id=${process.env.LINKEDIN_CLIENT_ID}` +
+    `&redirect_uri=${encodeURIComponent(redirectUri)}` +
+    `&response_type=code` +
+    `&scope=${encodeURIComponent(scope)}`;
+  
+  res.redirect(authUrl);
+});
+
+// Pinterest OAuth - Start connection
+app.get('/api/oauth/pinterest/connect', (req, res) => {
+  if (!process.env.PINTEREST_APP_ID) {
+    return res.status(400).json({ error: 'Pinterest not configured' });
+  }
+  
+  const redirectUri = `${BASE}/api/oauth/pinterest/callback`;
+  const scope = 'boards:read,boards:write,pins:read,pins:write';
+  
+  const authUrl = `https://www.pinterest.com/oauth/` +
+    `?client_id=${process.env.PINTEREST_APP_ID}` +
+    `&redirect_uri=${encodeURIComponent(redirectUri)}` +
+    `&response_type=code` +
+    `&scope=${encodeURIComponent(scope)}`;
   
   res.redirect(authUrl);
 });
@@ -473,6 +615,72 @@ app.get('/api/oauth/tiktok/callback', async (req, res) => {
   } catch (err) {
     console.error('TikTok OAuth error:', err);
     res.redirect('/?error=tiktok_connection_failed');
+  }
+});
+
+// YouTube OAuth - Handle callback
+app.get('/api/oauth/youtube/callback', async (req, res) => {
+  const { code, error } = req.query;
+  
+  if (error) {
+    return res.redirect('/?error=youtube_auth_failed');
+  }
+  
+  if (!code) {
+    return res.redirect('/?error=youtube_no_code');
+  }
+  
+  try {
+    const tokenResponse = await fetch('https://oauth2.googleapis.com/token', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: new URLSearchParams({
+        code: code,
+        client_id: process.env.YOUTUBE_CLIENT_ID,
+        client_secret: process.env.YOUTUBE_CLIENT_SECRET,
+        redirect_uri: `${BASE}/api/oauth/youtube/callback`,
+        grant_type: 'authorization_code'
+      })
+    });
+    
+    const tokenData = await tokenResponse.json();
+    
+    if (tokenData.error || !tokenData.access_token) {
+      console.error('YouTube token error:', tokenData);
+      return res.redirect('/?error=youtube_token_failed');
+    }
+    
+    // Get user info
+    const userResponse = await fetch('https://www.googleapis.com/youtube/v3/channels?part=snippet&mine=true', {
+      headers: { 'Authorization': `Bearer ${tokenData.access_token}` }
+    });
+    
+    const userData = await userResponse.json();
+    const channelTitle = userData.items?.[0]?.snippet?.title || 'YouTube User';
+    const channelId = userData.items?.[0]?.id || '';
+    
+    // Save to Supabase
+    if (supabase && req.user) {
+      await supabase
+        .from('connected_accounts')
+        .upsert({
+          username: req.user.username,
+          platform: 'youtube',
+          platform_user_id: channelId,
+          platform_username: channelTitle,
+          access_token: tokenData.access_token,
+          refresh_token: tokenData.refresh_token,
+          expires_at: new Date(Date.now() + tokenData.expires_in * 1000).toISOString(),
+          updated_at: new Date().toISOString()
+        }, {
+          onConflict: 'username,platform'
+        });
+    }
+    
+    res.redirect('/?success=youtube_connected');
+  } catch (err) {
+    console.error('YouTube OAuth error:', err);
+    res.redirect('/?error=youtube_connection_failed');
   }
 });
 

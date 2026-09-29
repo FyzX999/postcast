@@ -98,7 +98,7 @@ app.post('/api/settings', (req, res) => {
   res.json({ ok: true });
 });
 
-// Fallback titles for when API is unavailable
+// Fallback data for when API is unavailable
 const fallbackTitles = [
   '🔥 You Won\'t Believe What Happens Next',
   '⚡ This Changed Everything',
@@ -112,6 +112,9 @@ const fallbackTitles = [
   '💪 Motivation Monday',
 ];
 
+const fallbackHashtags = ['#viral', '#trending', '#foryou', '#viralvideo', '#shorts', '#reels', '#tiktok', '#youtube', '#content', '#creator'];
+
+// Generate titles with Gemini API
 app.post('/api/generate', async (req, res) => {
   try {
     const s = read('settings.json', {});
@@ -166,8 +169,7 @@ app.post('/api/generate', async (req, res) => {
   }
 });
 
-const fallbackHashtags = ['#viral', '#trending', '#foryou', '#viralvideo', '#shorts', '#reels', '#tiktok', '#youtube', '#content', '#creator'];
-
+// Suggest hashtags with Gemini API
 app.post('/api/suggest-hashtags', async (req, res) => {
   try {
     const { topic, title, description } = req.body;
@@ -200,9 +202,27 @@ app.post('/api/suggest-hashtags', async (req, res) => {
   } catch (e) {
     res.json({ hashtags: fallbackHashtags.slice(0, 5) });
   }
+});
 
+// Optimize content with Gemini API
+app.post('/api/optimize-content', async (req, res) => {
+  try {
+    const { title, description, topic, platforms } = req.body;
+    const platformInfo = platforms.length > 0
+      ? `Target platforms: ${platforms.join(', ')}.`
+      : 'Optimize for multiple platforms.';
 
-// Upload endpoint
+    // If no API key, return basic optimization
+    if (!process.env.GEMINI_API_KEY) {
+      return res.json({
+        optimized_description: (description || title) + '\n\n#ContentCreator #ShortForm',
+        tips: ['Keep it short and punchy', 'Use trending sounds', 'Post at peak hours', 'Engage with comments']
+      });
+    }
+
+    const r = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${process.env.GEMINI_API_KEY}`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
       body: JSON.stringify({
         contents: [{
           parts: [{

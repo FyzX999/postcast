@@ -121,13 +121,57 @@ const fallbackTitles = ['🔥 Amazing Content', '⚡ Must Watch', '✨ You Won\'
 const fallbackHashtags = ['#viral', '#trending', '#foryou', '#shorts', '#reels', '#content', '#creator'];
 
 // Platform list
-app.get('/api/platforms', (req, res) => {
-  res.json([
-    { key: 'youtube', name: 'YouTube Shorts', configured: false, connected: false },
-    { key: 'tiktok', name: 'TikTok', configured: false, connected: false },
-    { key: 'instagram', name: 'Instagram', configured: false, connected: false },
-    { key: 'snapchat', name: 'Snapchat', manual: true, configured: false, connected: false }
-  ]);
+app.get('/api/platforms', async (req, res) => {
+  const platforms = [
+    { 
+      key: 'youtube', 
+      name: 'YouTube Shorts', 
+      configured: !!(process.env.YOUTUBE_CLIENT_ID && process.env.YOUTUBE_CLIENT_SECRET),
+      connected: false 
+    },
+    { 
+      key: 'tiktok', 
+      name: 'TikTok', 
+      configured: !!(process.env.TIKTOK_CLIENT_KEY && process.env.TIKTOK_CLIENT_SECRET),
+      connected: false 
+    },
+    { 
+      key: 'instagram', 
+      name: 'Instagram', 
+      configured: !!(process.env.INSTAGRAM_CLIENT_ID && process.env.INSTAGRAM_CLIENT_SECRET),
+      connected: false 
+    },
+    { 
+      key: 'snapchat', 
+      name: 'Snapchat', 
+      manual: true, 
+      configured: false, 
+      connected: false 
+    }
+  ];
+  
+  // Check if user has connected accounts in Supabase
+  if (supabase && req.user) {
+    try {
+      const { data } = await supabase
+        .from('connected_accounts')
+        .select('platform, access_token')
+        .eq('username', req.user.username);
+      
+      if (data) {
+        data.forEach(account => {
+          const platform = platforms.find(p => p.key === account.platform);
+          if (platform) {
+            platform.connected = !!account.access_token;
+          }
+        });
+      }
+    } catch (e) {
+      console.error('Error checking connections:', e);
+    }
+  }
+  
+  res.json(platforms);
 });
 
 // Settings (using Supabase if available)
@@ -313,7 +357,116 @@ app.get('/api/analytics', (req, res) => {
   res.json({});
 });
 
-app.post('/api/disconnect/:p', (req, res) => {
+// TikTok OAuth - Start connection
+app.get('/api/oauth/tiktok/connect', (req, res) => {
+  if (!process.env.TIKTOK_CLIENT_KEY) {
+    return res.status(400).json({ error: 'TikTok not configured' });
+  }
+  
+  const csrfState = crypto.randomBytes(16).toString('hex');
+  const redirectUri = `${BASE}/api/oauth/tiktok/callback`;
+  
+  // Store state in session (for CSRF protection)
+  // In production, use Redis or database
+  const authUrl = `https://www.tiktok.com/v2/auth/authorize/` +
+    `?client_key=${process.env.TIKTOK_CLIENT_KEY}` +
+    `&scope=user.info.basic,video.upload,video.publish` +
+    `&response_type=code` +
+    `&redirect_uri=${encodeURIComponent(redirectUri)}` +
+    `&state=${csrfState}`;
+  
+  res.redirect(authUrl);
+});
+
+// TikTok OAuth - Handle callback
+app.get('/api/oauth/tiktok/callback', async (req, res) => {
+  const { code, state, error } = req.query;
+  
+  if (error) {
+    return res.redirect('/?error=tiktok_auth_failed');
+  }
+  
+  if (!code) {
+    return res.redirect('/?error=tiktok_no_code');
+  }
+  
+  try {
+    // Exchange code for access token
+    const tokenResponse = await fetch('https://open.tiktokapis.com/v2/oauth/token/', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+        'Cache-Control': 'no-cache'
+      },
+      body: new URLSearchParams({
+        client_key: process.env.TIKTOK_CLIENT_KEY,
+        client_secret: process.env.TIKTOK_CLIENT_SECRET,
+        code: code,
+        grant_type: 'authorization_code',
+        redirect_uri: `${BASE}/api/oauth/tiktok/callback`
+      })
+    });
+    
+    const tokenData = await tokenResponse.json();
+    
+    if (tokenData.error || !tokenData.data) {
+      console.error('TikTok token error:', tokenData);
+      return res.redirect('/?error=tiktok_token_failed');
+    }
+    
+    const { access_token, refresh_token, expires_in, open_id } = tokenData.data;
+    
+    // Get user info
+    const userResponse = await fetch('https://open.tiktokapis.com/v2/user/info/?fields=open_id,union_id,avatar_url,display_name', {
+      headers: {
+        'Authorization': `Bearer ${access_token}`
+      }
+    });
+    
+    const userData = await userResponse.json();
+    const displayName = userData.data?.user?.display_name || 'TikTok User';
+    
+    // Save to Supabase
+    if (supabase && req.user) {
+      await supabase
+        .from('connected_accounts')
+        .upsert({
+          username: req.user.username,
+          platform: 'tiktok',
+          platform_user_id: open_id,
+          platform_username: displayName,
+          access_token: access_token,
+          refresh_token: refresh_token,
+          expires_at: new Date(Date.now() + expires_in * 1000).toISOString(),
+          updated_at: new Date().toISOString()
+        }, {
+          onConflict: 'username,platform'
+        });
+    }
+    
+    res.redirect('/?success=tiktok_connected');
+  } catch (err) {
+    console.error('TikTok OAuth error:', err);
+    res.redirect('/?error=tiktok_connection_failed');
+  }
+});
+
+// Disconnect platform
+app.post('/api/disconnect/:p', async (req, res) => {
+  const platform = req.params.p;
+  
+  if (supabase && req.user) {
+    try {
+      await supabase
+        .from('connected_accounts')
+        .delete()
+        .eq('username', req.user.username)
+        .eq('platform', platform);
+    } catch (e) {
+      console.error('Disconnect error:', e);
+    }
+  }
+  
   res.json({ ok: true });
 });
 

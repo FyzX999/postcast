@@ -101,6 +101,11 @@ app.use((req, res, next) => {
     return next();
   }
   
+  // Skip auth for OAuth connect endpoints (we'll check auth in the callback)
+  if (req.path.startsWith('/api/oauth/') && req.path.includes('/connect')) {
+    return next();
+  }
+  
   // All API routes except login/verify/health/logout require auth
   if (req.path.startsWith('/api/')) {
     if (req.path === '/api/login' || req.path === '/api/verify' || req.path === '/api/health' || req.path === '/api/logout') {

@@ -19,13 +19,6 @@
   "env": {
     "PORT": "3000"
   },
-  "enviroments": {
-    "production": {
-      "env": {
-        "NODE_ENV": "production"
-      }
-    }
-  },
   "functions": {
     "server.js": {
       "memory": 1024,

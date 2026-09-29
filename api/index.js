@@ -98,35 +98,71 @@ app.post('/api/settings', (req, res) => {
   res.json({ ok: true });
 });
 
+// Fallback titles for when API is unavailable
+const fallbackTitles = [
+  '🔥 You Won\'t Believe What Happens Next',
+  '⚡ This Changed Everything',
+  '✨ The Ultimate Guide to Success',
+  '🎯 5 Secrets Nobody Tells You',
+  '💡 How to Level Up Your Game',
+  '🚀 From Zero to Hero in One Video',
+  '🎬 Watch Till The End',
+  '😱 This is Insane',
+  '🌟 Life-Changing Moment',
+  '💪 Motivation Monday',
+];
+
 app.post('/api/generate', async (req, res) => {
   try {
     const s = read('settings.json', {});
     const { topic, count = 1 } = req.body;
 
+    // If no API key, return fallback titles
+    if (!process.env.GEMINI_API_KEY) {
+      const titles = [];
+      for (let i = 0; i < count; i++) {
+        titles.push(fallbackTitles[i % fallbackTitles.length] + ' - ' + (topic || 'Video') + (count > 1 ? ` #${i + 1}` : ''));
+      }
+      return res.json({ titles });
+    }
+
     const prompt = count > 1
       ? `Generate ${count} different short-form video titles based on this topic: ${topic}\nStyle notes: ${s.style || 'none'}\n\nReply with JSON: {"titles": [array of ${count} titles]}`
-      : `The video is about: ${topic}\nStyle notes: ${s.style || 'none'}`;
+      : `The video is about: ${topic}\nStyle notes: ${s.style || 'none'}\n\nGenerate an engaging short-form video title. Reply with JSON: {"titles": ["title"]}`;
 
-    const r = await fetch('https://api.anthropic.com/v1/messages', {
+    const r = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${process.env.GEMINI_API_KEY}`, {
       method: 'POST',
-      headers: {
-        'content-type': 'application/json',
-        'x-api-key': process.env.ANTHROPIC_API_KEY,
-        'anthropic-version': '2023-06-01'
-      },
+      headers: { 'content-type': 'application/json' },
       body: JSON.stringify({
-        model: process.env.AI_MODEL || 'claude-sonnet-4-6',
-        max_tokens: 500,
-        system: 'You write short-form video titles and descriptions. Reply with only JSON.',
-        messages: [{ role: 'user', content: prompt }]
+        contents: [{
+          parts: [{
+            text: `System: You write short-form video titles and descriptions. Always reply with valid JSON only.\n\nUser: ${prompt}`
+          }]
+        }]
       })
     });
 
     const d = await r.json();
-    if (!r.ok) throw new Error(d.error?.message || 'AI request failed');
-    res.json(JSON.parse(d.content[0].text.replace(/```json|```/g, '').trim()));
+    if (!r.ok) {
+      // Fallback on API error
+      const titles = [];
+      for (let i = 0; i < count; i++) {
+        titles.push(fallbackTitles[i % fallbackTitles.length] + ' - ' + (topic || 'Video') + (count > 1 ? ` #${i + 1}` : ''));
+      }
+      return res.json({ titles });
+    }
+
+    const text = d.candidates?.[0]?.content?.parts?.[0]?.text || '';
+    const jsonStr = text.replace(/```json|```/g, '').trim();
+    res.json(JSON.parse(jsonStr));
   } catch (e) {
-    res.status(500).json({ error: e.message });
+    // Return fallback on any error
+    const titles = [];
+    const count = req.body.count || 1;
+    for (let i = 0; i < count; i++) {
+      titles.push(fallbackTitles[i % fallbackTitles.length] + ' - ' + (req.body.topic || 'Video') + (count > 1 ? ` #${i + 1}` : ''));
+    }
+    res.json({ titles });
   }
 });
 

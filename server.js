@@ -388,4 +388,4 @@ app.get('/api/analytics', async (req, res) => {
   res.json(out);
 });
 
-app.listen(process.env.PORT || 3000, () => console.log('Postcast running on ' + BASE));
+app.listen(process.env.PORT || 3000, () => console.log('✅ Postcast running on ' + BASE));

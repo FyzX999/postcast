@@ -239,10 +239,11 @@ app.get('/api/health', (req, res) => res.json({ ok: true }));
 
 // Serve index.html for all routes (SPA)
 app.get('*', (req, res) => {
-  try {
-    res.sendFile(path.join(__dirname, '../public/index.html'));
-  } catch (e) {
-    res.status(200).send('<!DOCTYPE html><html><body><h1>Postcast</h1><p>Loading...</p></body></html>');
+  const indexPath = path.join(__dirname, '../public/index.html');
+  if (fs.existsSync(indexPath)) {
+    res.sendFile(indexPath);
+  } else {
+    res.status(200).send('<!DOCTYPE html><html><head><title>Postcast</title></head><body><h1>Postcast</h1><p>Loading...</p><script>setTimeout(() => location.reload(), 2000);</script></body></html>');
   }
 });
 

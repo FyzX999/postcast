@@ -330,33 +330,36 @@ app.post('/api/posts/:id/reschedule', (req, res) => {
   res.json({ ok: true });
 });
 
-// Scheduler to publish scheduled posts (runs every minute)
-setInterval(async () => {
-  const history = read('history.json', []);
-  const now = new Date();
-  for (const post of history) {
-    if (post.status === 'scheduled' && post.scheduled_at && new Date(post.scheduled_at) <= now) {
-      try {
-        // Publish the post
-        const out = {};
-        await Promise.all(post.platforms.map(async key => {
-          try {
-            if (!publishers[key]) throw new Error('Not built yet');
-            const token = key === 'snapchat' ? null : await freshToken(key);
-            out[key] = { ok: true, ...(await publishers[key]({ file: post.file, url: `${BASE}/uploads/${post.file}`, title: post.title, description: post.description, token })) };
-            post.engagement[key] = { status: 'published' };
-          } catch (e) { out[key] = { ok: false, error: e.message }; }
-        }));
-        post.status = 'published';
-        write('history.json', history);
-      } catch (e) {
-        post.status = 'failed';
-        post.error = e.message;
-        write('history.json', history);
+// Scheduler to publish scheduled posts (runs every minute) - ONLY in local mode
+if (require.main === module) {
+  setInterval(async () => {
+    const history = read('history.json', []);
+    const now = new Date();
+    for (const post of history) {
+      if (post.status === 'scheduled' && post.scheduled_at && new Date(post.scheduled_at) <= now) {
+        try {
+          // Publish the post
+          const out = {};
+          await Promise.all(post.platforms.map(async key => {
+            try {
+              if (!publishers[key]) throw new Error('Not built yet');
+              const token = key === 'snapchat' ? null : await freshToken(key);
+              out[key] = { ok: true, ...(await publishers[key]({ file: post.file, url: `${BASE}/uploads/${post.file}`, title: post.title, description: post.description, token })) };
+              post.engagement[key] = { status: 'published' };
+            } catch (e) { out[key] = { ok: false, error: e.message }; }
+          }));
+          post.status = 'published';
+          write('history.json', history);
+        } catch (e) {
+          post.status = 'failed';
+          post.error = e.message;
+          write('history.json', history);
+        }
       }
     }
-  }
-}, 60000); // Check every minute
+  }, 60000); // Check every minute
+}
+
 const stats = {
   async tiktok(t) {
     const h = { Authorization: 'Bearer ' + t.access_token };
@@ -374,7 +377,7 @@ const stats = {
       recent: m.map(x => ({ title: (x.caption || '').slice(0, 60), likes: x.like_count, comments: x.comments_count })) };
   },
   async youtube(t) {
-    const d = await (await fetch('https://www.googleapis.com/youtube/v3/channels?part=statistics&mine=true', { headers: { Authorization: 'Bearer ' + t.access_token } })).json();
+    const d = await (await fetch('https://www.googleapis.com/youtube/v3/channels?part=statistics&mine=true', { headers: { Authorization: 'Bearer ' + token.access_token } })).json();
     const s = d.items?.[0]?.statistics || {};
     return { followers: +s.subscriberCount, videos: +s.videoCount, totalViews: +s.viewCount, recent: [] };
   },
@@ -388,4 +391,10 @@ app.get('/api/analytics', async (req, res) => {
   res.json(out);
 });
 
-app.listen(process.env.PORT || 3000, () => console.log('✅ Postcast running on ' + BASE));
+// Export the app (for Vercel)
+module.exports = app;
+
+// Only start server if running directly (not imported by Vercel)
+if (require.main === module) {
+  app.listen(process.env.PORT || 3000, () => console.log('✅ Postcast running on ' + BASE));
+}

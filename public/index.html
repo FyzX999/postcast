@@ -1041,7 +1041,7 @@ $('gen').onclick = async () => {
   const r = await api('/api/generate', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ topic: $('topic').value }) });
   $('gen').disabled = false;
   if (r.error) return say('⚠️ AI error: ' + r.error, 'error');
-  $('title').value = r.title;
+  $('title').value = r.titles ? r.titles[0] : (r.title || 'Untitled');
   $('desc').value = [r.description, defaults.defaultDescription].filter(Boolean).join('\n\n');
   updateCharCount();
   say('✅ Generated!', 'success');

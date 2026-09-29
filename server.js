@@ -241,7 +241,13 @@ app.post('/api/generate', async (req, res) => {
       body: JSON.stringify({
         contents: [{
           parts: [{ text: prompt }]
-        }]
+        }],
+        generationConfig: {
+          temperature: 1.0,
+          topK: 40,
+          topP: 0.95,
+          maxOutputTokens: 1024
+        }
       })
     });
     
@@ -283,7 +289,13 @@ app.post('/api/suggest-hashtags', async (req, res) => {
           parts: [{
             text: `Generate 5-10 trending hashtags for a video about: ${topic}. Title: ${title}. Description: ${description}. Reply with JSON: {"hashtags": ["#tag1", "#tag2"]}`
           }]
-        }]
+        }],
+        generationConfig: {
+          temperature: 1.0,
+          topK: 40,
+          topP: 0.95,
+          maxOutputTokens: 512
+        }
       })
     });
     

@@ -100,8 +100,8 @@ app.use((req, res, next) => {
     return next();
   }
   
-  // Skip auth for OAuth connect endpoints (we'll check auth in the callback)
-  if (req.path.startsWith('/api/oauth/') && req.path.includes('/connect')) {
+  // Skip auth for OAuth endpoints (both connect and callback)
+  if (req.path.startsWith('/api/oauth/')) {
     return next();
   }
   
@@ -459,8 +459,20 @@ app.get('/api/oauth/youtube/connect', (req, res) => {
     return res.status(400).json({ error: 'YouTube not configured' });
   }
   
+  // Get user from auth header for state tracking
+  const auth = req.headers.authorization || req.query.token || '';
+  const token = auth.replace('Bearer ', '');
+  const user = decodeToken(token);
+  
+  if (!user) {
+    return res.redirect('/?error=not_logged_in');
+  }
+  
   const redirectUri = `${BASE}/api/oauth/youtube/callback`;
   const scope = 'https://www.googleapis.com/auth/youtube.upload https://www.googleapis.com/auth/youtube.readonly';
+  
+  // Store username in state for callback
+  const state = Buffer.from(JSON.stringify({ username: user.username, token })).toString('base64');
   
   const authUrl = `https://accounts.google.com/o/oauth2/v2/auth` +
     `?client_id=${process.env.YOUTUBE_CLIENT_ID}` +
@@ -468,7 +480,8 @@ app.get('/api/oauth/youtube/connect', (req, res) => {
     `&response_type=code` +
     `&scope=${encodeURIComponent(scope)}` +
     `&access_type=offline` +
-    `&prompt=consent`;
+    `&prompt=consent` +
+    `&state=${state}`;
   
   res.redirect(authUrl);
 });
@@ -624,7 +637,7 @@ app.get('/api/oauth/tiktok/callback', async (req, res) => {
 
 // YouTube OAuth - Handle callback
 app.get('/api/oauth/youtube/callback', async (req, res) => {
-  const { code, error } = req.query;
+  const { code, error, state } = req.query;
   
   if (error) {
     return res.redirect('/?error=youtube_auth_failed');
@@ -635,6 +648,19 @@ app.get('/api/oauth/youtube/callback', async (req, res) => {
   }
   
   try {
+    // Decode state to get username
+    let username = null;
+    if (state) {
+      try {
+        const decoded = JSON.parse(Buffer.from(state, 'base64').toString());
+        username = decoded.username;
+      } catch (e) {}
+    }
+    
+    if (!username) {
+      return res.redirect('/?error=invalid_state');
+    }
+    
     const tokenResponse = await fetch('https://oauth2.googleapis.com/token', {
       method: 'POST',
       headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
@@ -664,17 +690,17 @@ app.get('/api/oauth/youtube/callback', async (req, res) => {
     const channelId = userData.items?.[0]?.id || '';
     
     // Save to Supabase
-    if (supabase && req.user) {
+    if (supabase) {
       await supabase
         .from('connected_accounts')
         .upsert({
-          username: req.user.username,
+          username: username,
           platform: 'youtube',
           platform_user_id: channelId,
           platform_username: channelTitle,
           access_token: tokenData.access_token,
           refresh_token: tokenData.refresh_token,
-          expires_at: new Date(Date.now() + tokenData.expires_in * 1000).toISOString(),
+          expires_at: new Date(Date.now() + (tokenData.expires_in || 3600) * 1000).toISOString(),
           updated_at: new Date().toISOString()
         }, {
           onConflict: 'username,platform'

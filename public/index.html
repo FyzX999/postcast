@@ -1016,7 +1016,10 @@ async function load() {
 }
 
 $('platforms').addEventListener('click', async e => {
-  if (e.target.dataset.on) location.href = '/api/oauth/' + e.target.dataset.on + '/connect';
+  if (e.target.dataset.on) {
+    const token = localStorage.getItem('auth_token');
+    location.href = '/api/oauth/' + e.target.dataset.on + '/connect?token=' + encodeURIComponent(token);
+  }
   if (e.target.dataset.off) { 
     await api('/api/disconnect/' + e.target.dataset.off, { method: 'POST' }); 
     load(); 

@@ -153,6 +153,10 @@ app.get('*', (req, res) => {
   res.type('text/html').send('<!DOCTYPE html><html><head><meta charset="utf-8"><title>Postcast</title></head><body><h1>Postcast</h1><p>App loading...</p></body></html>');
 });
 
-// Export for both local development and Vercel serverless
-module.exports = app;
-module.exports.default = app;
+// Export handler wrapper for Vercel serverless
+module.exports = (req, res) => {
+  return app(req, res);
+};
+
+// Export app for local development (server.js needs this)
+module.exports.app = app;

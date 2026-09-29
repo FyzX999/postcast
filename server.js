@@ -53,6 +53,14 @@ app.get('/login', (req, res) => {
   res.sendFile(path.join(__dirname, 'public/login.html'));
 });
 
+app.get('/terms', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public/terms.html'));
+});
+
+app.get('/privacy', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public/privacy.html'));
+});
+
 // Login endpoint
 app.post('/api/login', (req, res) => {
   const { username, password } = req.body;
@@ -88,6 +96,11 @@ app.use(express.static(path.join(__dirname, 'public')));
 
 // Authentication middleware for protected routes
 app.use((req, res, next) => {
+  // Skip auth for public pages
+  if (req.path === '/terms' || req.path === '/privacy' || req.path === '/terms.html' || req.path === '/privacy.html') {
+    return next();
+  }
+  
   // All API routes except login/verify/health/logout require auth
   if (req.path.startsWith('/api/')) {
     if (req.path === '/api/login' || req.path === '/api/verify' || req.path === '/api/health' || req.path === '/api/logout') {

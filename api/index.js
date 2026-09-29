@@ -365,4 +365,10 @@ app.get('*', (req, res) => {
   res.sendFile(path.join(__dirname, '../public/index.html'));
 });
 
+// Export for Vercel
 module.exports = app;
+
+// Also export as default for serverless
+if (process.env.VERCEL) {
+  module.exports.default = app;
+}

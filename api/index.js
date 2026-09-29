@@ -239,7 +239,12 @@ app.get('/api/health', (req, res) => res.json({ ok: true }));
 
 // Serve index.html for all routes (SPA)
 app.get('*', (req, res) => {
-  res.sendFile(path.join(__dirname, '../public/index.html'));
+  try {
+    res.sendFile(path.join(__dirname, '../public/index.html'));
+  } catch (e) {
+    res.status(200).send('<!DOCTYPE html><html><body><h1>Postcast</h1><p>Loading...</p></body></html>');
+  }
 });
 
+// Export for Vercel serverless
 module.exports = app;

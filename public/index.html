@@ -5,14 +5,119 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Postcast - Upload Once. Post Everywhere.</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@400;600;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@400;600;800&family=Inter:wght@400;600;800&family=Roboto:wght@400;600;800&family=Poppins:wght@400;600;800&family=Playfair+Display:wght@400;600;800&family=Space+Mono:wght@400;700&family=Lora:wght@400;600;700&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script src="/auth.js"></script>
 <style>
-:root{--bg:#f8fafc;--card:#fff;--ink:#0f172a;--muted:#64748b;--line:#e2e8f0;--accent:#3b82f6;--accent-dark:#2563eb;--accent-light:#93c5fd;--ok:#10b981;--warning:#f59e0b;--bad:#ef4444;--surface:#f1f5f9;--shadow:0 4px 6px rgba(0,0,0,0.07),0 10px 13px rgba(0,0,0,0.05);--shadow-lg:0 10px 15px rgba(0,0,0,0.1),0 4px 6px rgba(0,0,0,0.05);color-scheme:light}
-@media(prefers-color-scheme:dark){:root{--bg:#0f172a;--card:#1e293b;--ink:#f1f5f9;--muted:#94a3b8;--line:#334155;--accent:#60a5fa;--accent-dark:#3b82f6;--accent-light:#93c5fd;--ok:#34d399;--warning:#fbbf24;--bad:#f87171;--surface:#1e293b;--shadow:0 4px 6px rgba(0,0,0,0.3),0 10px 13px rgba(0,0,0,0.2);--shadow-lg:0 10px 15px rgba(0,0,0,0.4),0 4px 6px rgba(0,0,0,0.2);color-scheme:dark}}
+/* Base theme system */
+:root{
+  --bg:#f8fafc;--card:#fff;--ink:#0f172a;--muted:#64748b;--line:#e2e8f0;
+  --accent:#3b82f6;--accent-dark:#2563eb;--accent-light:#93c5fd;
+  --ok:#10b981;--warning:#f59e0b;--bad:#ef4444;--surface:#f1f5f9;
+  --shadow:0 4px 6px rgba(0,0,0,0.07),0 10px 13px rgba(0,0,0,0.05);
+  --shadow-lg:0 10px 15px rgba(0,0,0,0.1),0 4px 6px rgba(0,0,0,0.05);
+  color-scheme:light;
+}
+
+/* Dark Theme */
+:root[data-theme="dark"],:root[data-theme="auto"][data-system="dark"]{
+  --bg:#0f172a;--card:#1e293b;--ink:#f1f5f9;--muted:#94a3b8;--line:#334155;
+  --accent:#60a5fa;--accent-dark:#3b82f6;--accent-light:#93c5fd;
+  --ok:#34d399;--warning:#fbbf24;--bad:#f87171;--surface:#1e293b;
+  --shadow:0 4px 6px rgba(0,0,0,0.3),0 10px 13px rgba(0,0,0,0.2);
+  --shadow-lg:0 10px 15px rgba(0,0,0,0.4),0 4px 6px rgba(0,0,0,0.2);
+  color-scheme:dark;
+}
+
+/* Midnight Theme */
+:root[data-theme="midnight"]{
+  --bg:#000000;--card:#111111;--ink:#ffffff;--muted:#888888;--line:#222222;
+  --accent:#00d9ff;--accent-dark:#00b8d4;--accent-light:#4dffff;
+  --ok:#00ff88;--warning:#ffaa00;--bad:#ff3366;--surface:#0a0a0a;
+  --shadow:0 4px 6px rgba(0,0,0,0.5),0 10px 13px rgba(0,0,0,0.4);
+  --shadow-lg:0 10px 15px rgba(0,0,0,0.7),0 4px 6px rgba(0,0,0,0.5);
+  color-scheme:dark;
+}
+
+/* Sunset Theme */
+:root[data-theme="sunset"]{
+  --bg:#fff5f0;--card:#ffffff;--ink:#1a1a1a;--muted:#8b5a3c;--line:#ffe4d9;
+  --accent:#ff6b35;--accent-dark:#e55a2b;--accent-light:#ff8c5f;
+  --ok:#28a745;--warning:#ffc107;--bad:#dc3545;--surface:#fff9f7;
+  --shadow:0 4px 6px rgba(255,107,53,0.1),0 10px 13px rgba(255,107,53,0.05);
+  --shadow-lg:0 10px 15px rgba(255,107,53,0.15),0 4px 6px rgba(255,107,53,0.1);
+  color-scheme:light;
+}
+
+/* Forest Theme */
+:root[data-theme="forest"]{
+  --bg:#f0f7f4;--card:#ffffff;--ink:#1e3a2e;--muted:#5a7a6a;--line:#d4e8de;
+  --accent:#2d6a4f;--accent-dark:#1b4332;--accent-light:#52b788;
+  --ok:#40916c;--warning:#f77f00;--bad:#d62828;--surface:#f5faf7;
+  --shadow:0 4px 6px rgba(45,106,79,0.1),0 10px 13px rgba(45,106,79,0.05);
+  --shadow-lg:0 10px 15px rgba(45,106,79,0.15),0 4px 6px rgba(45,106,79,0.1);
+  color-scheme:light;
+}
+
+/* Ocean Theme */
+:root[data-theme="ocean"]{
+  --bg:#e8f4f8;--card:#ffffff;--ink:#0a2540;--muted:#4a6fa5;--line:#c5e2f0;
+  --accent:#0077cc;--accent-dark:#005fa3;--accent-light:#3399dd;
+  --ok:#06d6a0;--warning:#ffbe0b;--bad:#ef476f;--surface:#f2f8fb;
+  --shadow:0 4px 6px rgba(0,119,204,0.1),0 10px 13px rgba(0,119,204,0.05);
+  --shadow-lg:0 10px 15px rgba(0,119,204,0.15),0 4px 6px rgba(0,119,204,0.1);
+  color-scheme:light;
+}
+
+/* Purple Dream Theme */
+:root[data-theme="purple"]{
+  --bg:#f5f0ff;--card:#ffffff;--ink:#2d1b4e;--muted:#7e6b9f;--line:#e6dcff;
+  --accent:#8b5cf6;--accent-dark:#7c3aed;--accent-light:#a78bfa;
+  --ok:#10b981;--warning:#f59e0b;--bad:#ef4444;--surface:#faf7ff;
+  --shadow:0 4px 6px rgba(139,92,246,0.1),0 10px 13px rgba(139,92,246,0.05);
+  --shadow-lg:0 10px 15px rgba(139,92,246,0.15),0 4px 6px rgba(139,92,246,0.1);
+  color-scheme:light;
+}
+
+/* Rose Theme */
+:root[data-theme="rose"]{
+  --bg:#fff0f5;--card:#ffffff;--ink:#4a1a2c;--muted:#9d5c75;--line:#ffd6e7;
+  --accent:#e11d48;--accent-dark:#be123c;--accent-light:#f43f5e;
+  --ok:#059669;--warning:#ea580c;--bad:#dc2626;--surface:#fff7fa;
+  --shadow:0 4px 6px rgba(225,29,72,0.1),0 10px 13px rgba(225,29,72,0.05);
+  --shadow-lg:0 10px 15px rgba(225,29,72,0.15),0 4px 6px rgba(225,29,72,0.1);
+  color-scheme:light;
+}
+
+@media(prefers-color-scheme:dark){
+  :root[data-theme="auto"]{
+    --bg:#0f172a;--card:#1e293b;--ink:#f1f5f9;--muted:#94a3b8;--line:#334155;
+    --accent:#60a5fa;--accent-dark:#3b82f6;--accent-light:#93c5fd;
+    --ok:#34d399;--warning:#fbbf24;--bad:#f87171;--surface:#1e293b;
+    --shadow:0 4px 6px rgba(0,0,0,0.3),0 10px 13px rgba(0,0,0,0.2);
+    --shadow-lg:0 10px 15px rgba(0,0,0,0.4),0 4px 6px rgba(0,0,0,0.2);
+    color-scheme:dark;
+  }
+}
+
 *{box-sizing:border-box;margin:0;padding:0}
-body{background:var(--bg);color:var(--ink);font:16px/1.6 "Bricolage Grotesque",system-ui,sans-serif;padding:max(16px,env(safe-area-inset-top)) 16px max(32px,env(safe-area-inset-bottom));transition:background .3s,color .3s}
+body{
+  background:var(--bg);
+  color:var(--ink);
+  font:16px/1.6 var(--font-family,"Bricolage Grotesque"),system-ui,sans-serif;
+  padding:max(16px,env(safe-area-inset-top)) 16px max(32px,env(safe-area-inset-bottom));
+  transition:background .3s,color .3s;
+}
+
+/* Font families */
+:root[data-font="inter"]{--font-family:'Inter',sans-serif}
+:root[data-font="roboto"]{--font-family:'Roboto',sans-serif}
+:root[data-font="poppins"]{--font-family:'Poppins',sans-serif}
+:root[data-font="playfair"]{--font-family:'Playfair Display',serif}
+:root[data-font="space"]{--font-family:'Space Mono',monospace}
+:root[data-font="lora"]{--font-family:'Lora',serif}
+:root[data-font="mono"]{--font-family:'JetBrains Mono',monospace}
+
 main{max-width:900px;margin:0 auto;display:grid;gap:24px}
 header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px}
 h1{font-size:2.5rem;font-weight:800;margin:0;letter-spacing:-.03em;background:linear-gradient(135deg,var(--accent),var(--accent-dark));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
@@ -98,6 +203,13 @@ ul{margin:8px 0 0;padding-left:20px}
 .tab{padding:12px 16px;background:transparent;border:none;border-bottom:2px solid transparent;cursor:pointer;font-weight:600;transition:all .2s;color:var(--muted)}
 .tab:hover{color:var(--ink)}
 .tab.active{color:var(--accent);border-bottom-color:var(--accent)}
+.platform-logo{width:24px;height:24px;object-fit:contain;margin-right:8px}
+.platform-btn{display:flex;align-items:center;gap:8px;justify-content:center}
+.theme-preview{width:100%;height:60px;border-radius:8px;cursor:pointer;transition:all .2s;border:3px solid transparent;display:flex;overflow:hidden}
+.theme-preview:hover{transform:scale(1.05);box-shadow:var(--shadow-lg)}
+.theme-preview.selected{border-color:var(--accent);box-shadow:var(--shadow-lg)}
+.theme-preview-color{flex:1;height:100%}
+
 .form-group{display:grid;gap:12px;margin-bottom:16px}
 .form-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
 @media(max-width:600px){.form-row{grid-template-columns:1fr}.header-actions{flex-direction:column;width:100%}.grid{grid-template-columns:1fr}}
@@ -115,7 +227,7 @@ ul{margin:8px 0 0;padding-left:20px}
       <button class="theme-toggle" id="theme-toggle" title="Toggle dark mode">🌙</button>
     </div>
   </header>
-  <nav><button class="cur" data-v="post">📤 Post</button><button data-v="batch">📦 Batch Upload</button><button data-v="history">📋 History</button><button data-v="earn">💰 Earn</button></nav>
+  <nav><button class="cur" data-v="post">📤 Post</button><button data-v="batch">📦 Batch Upload</button><button data-v="history">📋 History</button><button data-v="earn">💰 Earn</button><button data-v="personalize">🎨 Personalize</button></nav>
   <div id="view-post" style="display:grid;gap:16px">
 
   <section>
@@ -533,6 +645,165 @@ ul{margin:8px 0 0;padding-left:20px}
       <h2>💰 Monetization Requirements</h2>
       <p class="status highlight">Last updated: September 29, 2026. Platforms change rules frequently — verify on each platform's monetization page.</p>
       <div id="reqs"></div>
+    </section>
+  </div>
+
+  <div id="view-personalize" hidden style="display:grid;gap:16px">
+    <section>
+      <h2>🎨 Theme</h2>
+      <p class="sub">Choose your preferred color scheme</p>
+      
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;margin-top:16px">
+        <div>
+          <div class="theme-preview" data-theme="auto">
+            <div class="theme-preview-color" style="background:#3b82f6"></div>
+            <div class="theme-preview-color" style="background:#60a5fa"></div>
+            <div class="theme-preview-color" style="background:#93c5fd"></div>
+          </div>
+          <p style="text-align:center;margin-top:8px;font-weight:600;font-size:.9rem">Auto</p>
+        </div>
+        
+        <div>
+          <div class="theme-preview" data-theme="light">
+            <div class="theme-preview-color" style="background:#f8fafc"></div>
+            <div class="theme-preview-color" style="background:#3b82f6"></div>
+            <div class="theme-preview-color" style="background:#e2e8f0"></div>
+          </div>
+          <p style="text-align:center;margin-top:8px;font-weight:600;font-size:.9rem">Light</p>
+        </div>
+        
+        <div>
+          <div class="theme-preview" data-theme="dark">
+            <div class="theme-preview-color" style="background:#0f172a"></div>
+            <div class="theme-preview-color" style="background:#60a5fa"></div>
+            <div class="theme-preview-color" style="background:#334155"></div>
+          </div>
+          <p style="text-align:center;margin-top:8px;font-weight:600;font-size:.9rem">Dark</p>
+        </div>
+        
+        <div>
+          <div class="theme-preview" data-theme="midnight">
+            <div class="theme-preview-color" style="background:#000000"></div>
+            <div class="theme-preview-color" style="background:#00d9ff"></div>
+            <div class="theme-preview-color" style="background:#222222"></div>
+          </div>
+          <p style="text-align:center;margin-top:8px;font-weight:600;font-size:.9rem">Midnight</p>
+        </div>
+        
+        <div>
+          <div class="theme-preview" data-theme="sunset">
+            <div class="theme-preview-color" style="background:#fff5f0"></div>
+            <div class="theme-preview-color" style="background:#ff6b35"></div>
+            <div class="theme-preview-color" style="background:#ffe4d9"></div>
+          </div>
+          <p style="text-align:center;margin-top:8px;font-weight:600;font-size:.9rem">Sunset</p>
+        </div>
+        
+        <div>
+          <div class="theme-preview" data-theme="forest">
+            <div class="theme-preview-color" style="background:#f0f7f4"></div>
+            <div class="theme-preview-color" style="background:#2d6a4f"></div>
+            <div class="theme-preview-color" style="background:#d4e8de"></div>
+          </div>
+          <p style="text-align:center;margin-top:8px;font-weight:600;font-size:.9rem">Forest</p>
+        </div>
+        
+        <div>
+          <div class="theme-preview" data-theme="ocean">
+            <div class="theme-preview-color" style="background:#e8f4f8"></div>
+            <div class="theme-preview-color" style="background:#0077cc"></div>
+            <div class="theme-preview-color" style="background:#c5e2f0"></div>
+          </div>
+          <p style="text-align:center;margin-top:8px;font-weight:600;font-size:.9rem">Ocean</p>
+        </div>
+        
+        <div>
+          <div class="theme-preview" data-theme="purple">
+            <div class="theme-preview-color" style="background:#f5f0ff"></div>
+            <div class="theme-preview-color" style="background:#8b5cf6"></div>
+            <div class="theme-preview-color" style="background:#e6dcff"></div>
+          </div>
+          <p style="text-align:center;margin-top:8px;font-weight:600;font-size:.9rem">Purple</p>
+        </div>
+        
+        <div>
+          <div class="theme-preview" data-theme="rose">
+            <div class="theme-preview-color" style="background:#fff0f5"></div>
+            <div class="theme-preview-color" style="background:#e11d48"></div>
+            <div class="theme-preview-color" style="background:#ffd6e7"></div>
+          </div>
+          <p style="text-align:center;margin-top:8px;font-weight:600;font-size:.9rem">Rose</p>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <h2>🔤 Font Style</h2>
+      <p class="sub">Change the text font across the entire site</p>
+      
+      <div style="display:grid;gap:12px;margin-top:16px">
+        <button class="alt font-option" data-font="default" style="font-family:'Bricolage Grotesque',sans-serif;justify-content:flex-start;text-align:left">
+          <span style="font-weight:800;font-size:1.2rem">Aa</span>
+          <span style="flex:1">Bricolage Grotesque (Default)</span>
+          <span class="status">Modern & Bold</span>
+        </button>
+        
+        <button class="alt font-option" data-font="inter" style="font-family:'Inter',sans-serif;justify-content:flex-start;text-align:left">
+          <span style="font-weight:800;font-size:1.2rem">Aa</span>
+          <span style="flex:1">Inter</span>
+          <span class="status">Clean & Professional</span>
+        </button>
+        
+        <button class="alt font-option" data-font="roboto" style="font-family:'Roboto',sans-serif;justify-content:flex-start;text-align:left">
+          <span style="font-weight:800;font-size:1.2rem">Aa</span>
+          <span style="flex:1">Roboto</span>
+          <span class="status">Minimal & Tech</span>
+        </button>
+        
+        <button class="alt font-option" data-font="poppins" style="font-family:'Poppins',sans-serif;justify-content:flex-start;text-align:left">
+          <span style="font-weight:800;font-size:1.2rem">Aa</span>
+          <span style="flex:1">Poppins</span>
+          <span class="status">Friendly & Round</span>
+        </button>
+        
+        <button class="alt font-option" data-font="playfair" style="font-family:'Playfair Display',serif;justify-content:flex-start;text-align:left">
+          <span style="font-weight:800;font-size:1.2rem">Aa</span>
+          <span style="flex:1">Playfair Display</span>
+          <span class="status">Elegant & Serif</span>
+        </button>
+        
+        <button class="alt font-option" data-font="lora" style="font-family:'Lora',serif;justify-content:flex-start;text-align:left">
+          <span style="font-weight:800;font-size:1.2rem">Aa</span>
+          <span style="flex:1">Lora</span>
+          <span class="status">Classic & Readable</span>
+        </button>
+        
+        <button class="alt font-option" data-font="space" style="font-family:'Space Mono',monospace;justify-content:flex-start;text-align:left">
+          <span style="font-weight:800;font-size:1.2rem">Aa</span>
+          <span style="flex:1">Space Mono</span>
+          <span class="status">Retro & Mono</span>
+        </button>
+        
+        <button class="alt font-option" data-font="mono" style="font-family:'JetBrains Mono',monospace;justify-content:flex-start;text-align:left">
+          <span style="font-weight:800;font-size:1.2rem">Aa</span>
+          <span style="flex:1">JetBrains Mono</span>
+          <span class="status">Developer & Code</span>
+        </button>
+      </div>
+    </section>
+
+    <section>
+      <h2>💾 Your Preferences</h2>
+      <p class="sub">Your personalization settings are saved automatically</p>
+      
+      <div class="highlight" style="margin-top:16px">
+        <p style="margin:0"><strong>Current Theme:</strong> <span id="current-theme-name">Auto</span></p>
+        <p style="margin:8px 0 0"><strong>Current Font:</strong> <span id="current-font-name">Bricolage Grotesque</span></p>
+      </div>
+      
+      <div class="actions">
+        <button id="reset-personalization" class="alt">↺ Reset to Defaults</button>
+      </div>
     </section>
   </div>
 </main>
@@ -1000,16 +1271,23 @@ async function load() {
   
   $('platforms').innerHTML = platforms.map(p => `
     <div class="card-compact">
-      <strong>${p.name}</strong>
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
+        ${platformLogos[p.key] ? `<img src="${platformLogos[p.key]}" class="platform-logo" alt="${p.name} logo" style="filter:${document.documentElement.getAttribute('data-theme')?.includes('dark') || document.documentElement.getAttribute('data-theme') === 'midnight' ? 'invert(1)' : 'none'}">` : ''}
+        <strong>${p.name}</strong>
+      </div>
       <p class="status" style="margin:8px 0">
         ${p.manual ? '✋ Manual: Post in-app' : p.connected ? '✅ Connected' : p.configured ? '⚠️ Not connected' : '❌ Add API keys'}
       </p>
-      ${p.manual ? '' : p.connected ? `<button class="alt" style="width:100%;margin-top:8px" data-off="${p.key}">🔗 Disconnect</button>` : `<button class="alt" ${p.configured ? '' : 'disabled'} style="width:100%;margin-top:8px" data-on="${p.key}">🔗 Connect</button>`}
+      ${p.manual ? '' : p.connected ? `<button class="alt platform-btn" style="width:100%;margin-top:8px" data-off="${p.key}">🔗 Disconnect</button>` : `<button class="alt platform-btn" ${p.configured ? '' : 'disabled'} style="width:100%;margin-top:8px" data-on="${p.key}">${platformLogos[p.key] ? `<img src="${platformLogos[p.key]}" style="width:20px;height:20px;filter:${document.documentElement.getAttribute('data-theme')?.includes('dark') || document.documentElement.getAttribute('data-theme') === 'midnight' ? 'invert(1)' : 'none'}">` : '🔗'} Connect</button>`}
     </div>
   `).join('');
   
   $('picks').innerHTML = platforms.filter(p => p.connected || p.manual).map(p => `
-    <label><input type="checkbox" value="${p.key}" checked> ${p.name}</label>
+    <label style="display:flex;align-items:center;gap:10px">
+      <input type="checkbox" value="${p.key}" checked style="width:20px;height:20px">
+      ${platformLogos[p.key] ? `<img src="${platformLogos[p.key]}" style="width:20px;height:20px;filter:${document.documentElement.getAttribute('data-theme')?.includes('dark') || document.documentElement.getAttribute('data-theme') === 'midnight' ? 'invert(1)' : 'none'}">` : ''}
+      <span>${p.name}</span>
+    </label>
   `).join('') || '<span class="status">Connect an account first.</span>';
   
   restoreFormData();
@@ -1265,10 +1543,12 @@ function show(v) {
   $('view-batch').hidden = v !== 'batch';
   $('view-history').hidden = v !== 'history';
   $('view-earn').hidden = v !== 'earn';
+  $('view-personalize').hidden = v !== 'personalize';
   $$('nav button').forEach(b => b.classList.toggle('cur', b.dataset.v === v));
   if (v === 'earn') loadEarn();
   if (v === 'history') loadHistory();
   if (v === 'batch') loadBatchUI();
+  if (v === 'personalize') loadPersonalize();
 }
 document.querySelector('nav').onclick = e => e.target.dataset.v && show(e.target.dataset.v);
 
@@ -1277,7 +1557,11 @@ let batchFiles = [];
 
 function loadBatchUI() {
   $('batch-picks').innerHTML = platforms.filter(p => p.connected || p.manual).map(p => `
-    <label><input type="checkbox" value="${p.key}" checked> ${p.name}</label>
+    <label style="display:flex;align-items:center;gap:10px">
+      <input type="checkbox" value="${p.key}" checked style="width:20px;height:20px">
+      ${platformLogos[p.key] ? `<img src="${platformLogos[p.key]}" style="width:20px;height:20px;filter:${document.documentElement.getAttribute('data-theme')?.includes('dark') || document.documentElement.getAttribute('data-theme') === 'midnight' ? 'invert(1)' : 'none'}">` : ''}
+      <span>${p.name}</span>
+    </label>
   `).join('') || '<span class="status">Connect an account first.</span>';
 }
 
@@ -1829,6 +2113,157 @@ function renderCharts(platformData) {
     });
   }
 }
+
+// Platform logos
+const platformLogos = {
+  tiktok: 'https://cdn.jsdelivr.net/npm/simple-icons@v11/icons/tiktok.svg',
+  youtube: 'https://cdn.jsdelivr.net/npm/simple-icons@v11/icons/youtube.svg',
+  instagram: 'https://cdn.jsdelivr.net/npm/simple-icons@v11/icons/instagram.svg',
+  snapchat: 'https://cdn.jsdelivr.net/npm/simple-icons@v11/icons/snapchat.svg',
+  twitter: 'https://cdn.jsdelivr.net/npm/simple-icons@v11/icons/x.svg',
+  facebook: 'https://cdn.jsdelivr.net/npm/simple-icons@v11/icons/facebook.svg',
+  linkedin: 'https://cdn.jsdelivr.net/npm/simple-icons@v11/icons/linkedin.svg',
+  pinterest: 'https://cdn.jsdelivr.net/npm/simple-icons@v11/icons/pinterest.svg',
+  rumble: 'https://cdn.jsdelivr.net/npm/simple-icons@v11/icons/rumble.svg'
+};
+
+// Personalization System
+function loadPersonalize() {
+  const currentTheme = localStorage.getItem('theme') || 'auto';
+  const currentFont = localStorage.getItem('font') || 'default';
+  
+  // Highlight selected theme
+  $$('.theme-preview').forEach(el => {
+    el.classList.toggle('selected', el.dataset.theme === currentTheme);
+  });
+  
+  // Highlight selected font
+  $$('.font-option').forEach(el => {
+    if (el.dataset.font === currentFont) {
+      el.style.borderColor = 'var(--accent)';
+      el.style.background = 'rgba(59, 130, 246, 0.05)';
+    } else {
+      el.style.borderColor = 'var(--line)';
+      el.style.background = 'var(--surface)';
+    }
+  });
+  
+  updatePersonalizationDisplay();
+}
+
+function applyTheme(theme) {
+  document.documentElement.setAttribute('data-theme', theme);
+  localStorage.setItem('theme', theme);
+  
+  // Update theme toggle icon
+  if (theme === 'dark' || theme === 'midnight') {
+    $('theme-toggle').textContent = '☀️';
+  } else if (theme === 'light' || theme === 'auto') {
+    $('theme-toggle').textContent = '🌙';
+  }
+  
+  updatePersonalizationDisplay();
+  notifications.show('Theme applied: ' + theme, 'success', '🎨 Theme Changed');
+}
+
+function applyFont(font) {
+  if (font === 'default') {
+    document.documentElement.removeAttribute('data-font');
+  } else {
+    document.documentElement.setAttribute('data-font', font);
+  }
+  localStorage.setItem('font', font);
+  updatePersonalizationDisplay();
+  notifications.show('Font applied successfully', 'success', '🔤 Font Changed');
+}
+
+function updatePersonalizationDisplay() {
+  const theme = localStorage.getItem('theme') || 'auto';
+  const font = localStorage.getItem('font') || 'default';
+  
+  const themeNames = {
+    auto: 'Auto (System)',
+    light: 'Light',
+    dark: 'Dark',
+    midnight: 'Midnight',
+    sunset: 'Sunset',
+    forest: 'Forest',
+    ocean: 'Ocean',
+    purple: 'Purple Dream',
+    rose: 'Rose'
+  };
+  
+  const fontNames = {
+    default: 'Bricolage Grotesque',
+    inter: 'Inter',
+    roboto: 'Roboto',
+    poppins: 'Poppins',
+    playfair: 'Playfair Display',
+    lora: 'Lora',
+    space: 'Space Mono',
+    mono: 'JetBrains Mono'
+  };
+  
+  if ($('current-theme-name')) $('current-theme-name').textContent = themeNames[theme] || theme;
+  if ($('current-font-name')) $('current-font-name').textContent = fontNames[font] || font;
+}
+
+// Theme preview click handlers
+document.addEventListener('click', (e) => {
+  const themePreview = e.target.closest('.theme-preview');
+  if (themePreview) {
+    const theme = themePreview.dataset.theme;
+    applyTheme(theme);
+    loadPersonalize();
+  }
+  
+  const fontOption = e.target.closest('.font-option');
+  if (fontOption) {
+    const font = fontOption.dataset.font;
+    applyFont(font);
+    loadPersonalize();
+  }
+});
+
+// Reset personalization
+if ($('reset-personalization')) {
+  $('reset-personalization').onclick = () => {
+    if (!confirm('Reset all personalization settings to defaults?')) return;
+    
+    localStorage.removeItem('theme');
+    localStorage.removeItem('font');
+    document.documentElement.setAttribute('data-theme', 'auto');
+    document.documentElement.removeAttribute('data-font');
+    $('theme-toggle').textContent = '🌙';
+    
+    loadPersonalize();
+    notifications.show('Personalization reset to defaults', 'success', '↺ Reset Complete');
+  };
+}
+
+// Initialize personalization on page load
+const savedTheme = localStorage.getItem('theme');
+const savedFont = localStorage.getItem('font');
+
+if (savedTheme) {
+  document.documentElement.setAttribute('data-theme', savedTheme);
+  if (savedTheme === 'dark' || savedTheme === 'midnight') {
+    $('theme-toggle').textContent = '☀️';
+  }
+}
+
+if (savedFont && savedFont !== 'default') {
+  document.documentElement.setAttribute('data-font', savedFont);
+}
+
+// Update theme toggle to cycle through themes
+$('theme-toggle').addEventListener('click', () => {
+  const currentTheme = localStorage.getItem('theme') || 'auto';
+  const themes = ['auto', 'light', 'dark'];
+  const currentIndex = themes.indexOf(currentTheme);
+  const nextTheme = themes[(currentIndex + 1) % themes.length];
+  applyTheme(nextTheme);
+});
 
 load();
 

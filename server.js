@@ -8,8 +8,7 @@ const app = express();
 
 // Auto-detect BASE URL for Vercel
 const BASE = process.env.PUBLIC_BASE_URL 
-  || (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : null)
-  || 'http://localhost:3000';
+  || 'https://postcast.vercel.app'; // Always use production URL for OAuth
 
 // Initialize Supabase client (optional - gracefully handle if not configured)
 let supabase = null;

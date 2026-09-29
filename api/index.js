@@ -200,34 +200,9 @@ app.post('/api/suggest-hashtags', async (req, res) => {
   } catch (e) {
     res.json({ hashtags: fallbackHashtags.slice(0, 5) });
   }
-});
 
-    const d = await r.json();
-    if (!r.ok) throw new Error(d.error?.message || 'AI request failed');
-    res.json(JSON.parse(d.content[0].text.replace(/```json|```/g, '').trim()));
-  } catch (e) {
-    res.status(500).json({ error: e.message });
-  }
-});
 
-app.post('/api/optimize-content', async (req, res) => {
-  try {
-    const { title, description, topic, platforms } = req.body;
-    const platformInfo = platforms.length > 0
-      ? `Target platforms: ${platforms.join(', ')}.`
-      : 'Optimize for multiple platforms.';
-
-    // If no API key, return basic optimization
-    if (!process.env.GEMINI_API_KEY) {
-      return res.json({
-        optimized_description: (description || title) + '\n\n#ContentCreator #ShortForm',
-        tips: ['Keep it short and punchy', 'Use trending sounds', 'Post at peak hours', 'Engage with comments']
-      });
-    }
-
-    const r = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${process.env.GEMINI_API_KEY}`, {
-      method: 'POST',
-      headers: { 'content-type': 'application/json' },
+// Upload endpoint
       body: JSON.stringify({
         contents: [{
           parts: [{

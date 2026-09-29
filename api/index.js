@@ -217,26 +217,42 @@ app.post('/api/optimize-content', async (req, res) => {
       ? `Target platforms: ${platforms.join(', ')}.`
       : 'Optimize for multiple platforms.';
 
-    const r = await fetch('https://api.anthropic.com/v1/messages', {
+    // If no API key, return basic optimization
+    if (!process.env.GEMINI_API_KEY) {
+      return res.json({
+        optimized_description: (description || title) + '\n\n#ContentCreator #ShortForm',
+        tips: ['Keep it short and punchy', 'Use trending sounds', 'Post at peak hours', 'Engage with comments']
+      });
+    }
+
+    const r = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${process.env.GEMINI_API_KEY}`, {
       method: 'POST',
-      headers: {
-        'content-type': 'application/json',
-        'x-api-key': process.env.ANTHROPIC_API_KEY,
-        'anthropic-version': '2023-06-01'
-      },
+      headers: { 'content-type': 'application/json' },
       body: JSON.stringify({
-        model: process.env.AI_MODEL || 'claude-sonnet-4-6',
-        max_tokens: 500,
-        system: 'You optimize descriptions for engagement. Reply with JSON: {"optimized_description": string, "tips": []}',
-        messages: [{ role: 'user', content: `Title: ${title}\nDescription: ${description}\nTopic: ${topic}\n\n${platformInfo}\n\nOptimize.` }]
+        contents: [{
+          parts: [{
+            text: `System: You optimize descriptions for engagement. Always reply with valid JSON only.\n\nUser: Title: ${title}\nDescription: ${description}\nTopic: ${topic}\n\n${platformInfo}\n\nOptimize for maximum engagement. Reply with JSON: {"optimized_description": string, "tips": [array of tips]}`
+          }]
+        }]
       })
     });
 
     const d = await r.json();
-    if (!r.ok) throw new Error(d.error?.message || 'AI request failed');
-    res.json(JSON.parse(d.content[0].text.replace(/```json|```/g, '').trim()));
+    if (!r.ok) {
+      return res.json({
+        optimized_description: (description || title) + '\n\n#ContentCreator #ShortForm',
+        tips: ['Keep it short and punchy', 'Use trending sounds', 'Post at peak hours', 'Engage with comments']
+      });
+    }
+
+    const text = d.candidates?.[0]?.content?.parts?.[0]?.text || '';
+    const jsonStr = text.replace(/```json|```/g, '').trim();
+    res.json(JSON.parse(jsonStr));
   } catch (e) {
-    res.status(500).json({ error: e.message });
+    res.json({
+      optimized_description: (req.body.description || req.body.title) + '\n\n#ContentCreator #ShortForm',
+      tips: ['Keep it short and punchy', 'Use trending sounds', 'Post at peak hours', 'Engage with comments']
+    });
   }
 });
 

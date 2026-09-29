@@ -218,22 +218,28 @@ app.get('/api/platforms', async (req, res) => {
   // Check if user has connected accounts in Supabase
   if (supabase && req.user) {
     try {
-      const { data } = await supabase
+      console.log('Checking connections for user:', req.user.username);
+      const { data, error } = await supabase
         .from('connected_accounts')
         .select('platform, access_token')
         .eq('username', req.user.username);
       
-      if (data) {
+      console.log('Supabase response:', { data, error });
+      
+      if (data && !error) {
         data.forEach(account => {
           const platform = platforms.find(p => p.key === account.platform);
           if (platform) {
             platform.connected = !!account.access_token;
+            console.log(`Platform ${account.platform} connected:`, !!account.access_token);
           }
         });
       }
     } catch (e) {
       console.error('Error checking connections:', e);
     }
+  } else {
+    console.log('Supabase or user not available:', { supabase: !!supabase, user: !!req.user });
   }
   
   res.json(platforms);

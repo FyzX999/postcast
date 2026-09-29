@@ -2,6 +2,7 @@ require('dotenv').config();
 const express = require('express');
 const path = require('path');
 const { createClient } = require('@supabase/supabase-js');
+const crypto = require('crypto');
 
 const app = express();
 
@@ -20,34 +21,81 @@ if (process.env.SUPABASE_URL && process.env.SUPABASE_KEY) {
 const AUTH_USERNAME = process.env.AUTH_USERNAME || 'admin';
 const AUTH_PASSWORD = process.env.AUTH_PASSWORD || 'password';
 
+// In-memory token store (in production, use Redis or database)
+const tokens = new Map();
+
+// Generate a secure token
+function generateToken() {
+  return crypto.randomBytes(32).toString('hex');
+}
+
+app.use(express.json());
+
+// Login endpoint
+app.post('/api/login', (req, res) => {
+  const { username, password } = req.body;
+  
+  if (username === AUTH_USERNAME && password === AUTH_PASSWORD) {
+    const token = generateToken();
+    tokens.set(token, { username, createdAt: Date.now() });
+    
+    res.json({ success: true, token });
+  } else {
+    res.status(401).json({ success: false, message: 'Invalid username or password' });
+  }
+});
+
+// Verify token endpoint
+app.get('/api/verify', (req, res) => {
+  const auth = req.headers.authorization || '';
+  const token = auth.replace('Bearer ', '');
+  
+  if (tokens.has(token)) {
+    res.json({ valid: true });
+  } else {
+    res.status(401).json({ valid: false });
+  }
+});
+
+// Logout endpoint
+app.post('/api/logout', (req, res) => {
+  const auth = req.headers.authorization || '';
+  const token = auth.replace('Bearer ', '');
+  
+  tokens.delete(token);
+  res.json({ success: true });
+});
+
 // Authentication middleware
 app.use((req, res, next) => {
-  // Skip auth for static files and health check
-  if (req.path === '/api/health' || req.path.startsWith('/uploads/') || req.path.match(/\.(js|css|png|jpg|gif|svg|ico|html|woff|woff2|ttf)$/i)) {
+  // Skip auth for login page and login endpoint
+  if (req.path === '/login.html' || req.path === '/api/login' || req.path === '/api/health') {
     return next();
   }
   
-  // Check Basic Auth
-  const auth = req.headers.authorization || '';
-  const [scheme, credentials] = auth.split(' ');
-  
-  if (scheme === 'Basic' && credentials) {
-    try {
-      const decoded = Buffer.from(credentials, 'base64').toString();
-      const [username, password] = decoded.split(':');
-      
-      if (username === AUTH_USERNAME && password === AUTH_PASSWORD) {
-        return next();
-      }
-    } catch (e) {}
+  // Skip auth for static assets
+  if (req.path.match(/\.(js|css|png|jpg|gif|svg|ico|woff|woff2|ttf)$/i)) {
+    return next();
   }
   
-  // Require login
-  res.set('WWW-Authenticate', 'Basic realm="Postcast - Login Required"');
-  res.status(401).send('Authentication required');
+  // Check for Bearer token
+  const auth = req.headers.authorization || '';
+  const token = auth.replace('Bearer ', '');
+  
+  if (tokens.has(token)) {
+    req.user = tokens.get(token);
+    return next();
+  }
+  
+  // Redirect to login page for HTML requests
+  if (req.path === '/' || req.path === '/index.html') {
+    return res.redirect('/login.html');
+  }
+  
+  // Return 401 for API requests
+  res.status(401).json({ error: 'Authentication required' });
 });
 
-app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
 
 // Fallback data

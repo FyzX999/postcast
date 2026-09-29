@@ -6,17 +6,19 @@ const path = require('path');
 const crypto = require('crypto');
 
 const app = express();
-const BASE = process.env.PUBLIC_BASE_URL || 'http://localhost:3000';
+
+// Directories
 const DATA = path.join(__dirname, '../data');
 const UP = path.join(__dirname, '../uploads');
 
-// Create directories if they don't exist
+// Create directories
 [DATA, UP].forEach(d => {
   try {
     fs.mkdirSync(d, { recursive: true });
   } catch (e) {}
 });
 
+// Helper functions
 const read = (f, d) => {
   try {
     return JSON.parse(fs.readFileSync(path.join(DATA, f)));
@@ -28,54 +30,44 @@ const read = (f, d) => {
 const write = (f, v) => {
   try {
     fs.writeFileSync(path.join(DATA, f), JSON.stringify(v, null, 2));
-  } catch (e) {
-    console.error('Write error:', e);
-  }
+  } catch (e) {}
 };
 
-// Password gate
-app.use((req, res, next) => {
-  if (!process.env.APP_PASSWORD || req.path.startsWith('/uploads/') || req.path.includes('/callback')) return next();
-  const b64 = (req.headers.authorization || '').split(' ')[1] || '';
-  if (Buffer.from(b64, 'base64').toString().split(':').slice(1).join(':') === process.env.APP_PASSWORD) return next();
-  res.set('WWW-Authenticate', 'Basic realm="Postcast"').status(401).send('Login required');
-});
-
+// Middleware
 app.use(express.json());
 app.use(express.static(path.join(__dirname, '../public')));
 app.use('/uploads', express.static(UP));
 
-// Platforms configuration
-const P = {
-  youtube: {
-    name: 'YouTube Shorts',
-    auth: 'https://accounts.google.com/o/oauth2/v2/auth',
-    token: 'https://oauth2.googleapis.com/token',
-    id: 'GOOGLE_CLIENT_ID',
-    secret: 'GOOGLE_CLIENT_SECRET',
-    idField: 'client_id',
-    scope: 'https://www.googleapis.com/auth/youtube.upload https://www.googleapis.com/auth/youtube.readonly',
-    extra: { access_type: 'offline', prompt: 'consent' }
-  },
-  tiktok: {
-    name: 'TikTok',
-    auth: 'https://www.tiktok.com/v2/auth/authorize/',
-    token: 'https://open.tiktokapis.com/v2/oauth/token/',
-    id: 'TIKTOK_CLIENT_KEY',
-    secret: 'TIKTOK_CLIENT_SECRET',
-    idField: 'client_key',
-    scope: 'user.info.basic,user.info.stats,video.publish,video.list'
-  },
-  instagram: {
-    name: 'Instagram',
-    auth: 'https://www.facebook.com/v21.0/dialog/oauth',
-    token: 'https://graph.facebook.com/v21.0/oauth/access_token',
-    id: 'META_APP_ID',
-    secret: 'META_APP_SECRET',
-    idField: 'client_id',
-    scope: 'instagram_basic,instagram_content_publish,pages_show_list,pages_read_engagement,instagram_manage_insights'
+// Password protection
+app.use((req, res, next) => {
+  if (!process.env.APP_PASSWORD || req.path.startsWith('/uploads') || req.path.includes('/callback') || req.path === '/') {
+    return next();
   }
+  
+  const auth = req.headers.authorization || '';
+  const [scheme, credentials] = auth.split(' ');
+  
+  if (scheme === 'Basic' && credentials) {
+    const [user, pass] = Buffer.from(credentials, 'base64').toString().split(':');
+    if (pass === process.env.APP_PASSWORD) {
+      return next();
+    }
+  }
+  
+  res.set('WWW-Authenticate', 'Basic realm="Postcast"');
+  res.status(401).send('Login required');
+});
+
+// Platform configs
+const P = {
+  youtube: { name: 'YouTube Shorts', id: 'GOOGLE_CLIENT_ID', secret: 'GOOGLE_CLIENT_SECRET' },
+  tiktok: { name: 'TikTok', id: 'TIKTOK_CLIENT_KEY', secret: 'TIKTOK_CLIENT_SECRET' },
+  instagram: { name: 'Instagram', id: 'META_APP_ID', secret: 'META_APP_SECRET' }
 };
+
+// Fallback data
+const fallbackTitles = ['🔥 You Won\'t Believe This', '⚡ This Changed Everything', '✨ Mind Blowing', '🎯 Must Watch', '💡 Game Changer'];
+const fallbackHashtags = ['#viral', '#trending', '#foryou', '#shorts', '#reels'];
 
 // API Routes
 app.get('/api/platforms', (req, res) => {
@@ -86,11 +78,12 @@ app.get('/api/platforms', (req, res) => {
     configured: !!process.env[p.id],
     connected: !!tokens[key]
   }));
-  list.push({ key: 'snapchat', name: 'Snapchat', manual: true });
   res.json(list);
 });
 
-app.get('/api/settings', (req, res) => res.json(read('settings.json', { defaultDescription: '', style: '', hashtagStrategy: 'auto', videoProcessing: 'auto', watermark: false })));
+app.get('/api/settings', (req, res) => {
+  res.json(read('settings.json', { defaultDescription: '', style: '' }));
+});
 
 app.post('/api/settings', (req, res) => {
   const { defaultDescription = '', style = '' } = req.body;
@@ -98,29 +91,11 @@ app.post('/api/settings', (req, res) => {
   res.json({ ok: true });
 });
 
-// Fallback data for when API is unavailable
-const fallbackTitles = [
-  '🔥 You Won\'t Believe What Happens Next',
-  '⚡ This Changed Everything',
-  '✨ The Ultimate Guide to Success',
-  '🎯 5 Secrets Nobody Tells You',
-  '💡 How to Level Up Your Game',
-  '🚀 From Zero to Hero in One Video',
-  '🎬 Watch Till The End',
-  '😱 This is Insane',
-  '🌟 Life-Changing Moment',
-  '💪 Motivation Monday',
-];
-
-const fallbackHashtags = ['#viral', '#trending', '#foryou', '#viralvideo', '#shorts', '#reels', '#tiktok', '#youtube', '#content', '#creator'];
-
-// Generate titles with Gemini API
+// Generate titles
 app.post('/api/generate', async (req, res) => {
   try {
-    const s = read('settings.json', {});
     const { topic, count = 1 } = req.body;
 
-    // If no API key, return fallback titles
     if (!process.env.GEMINI_API_KEY) {
       const titles = [];
       for (let i = 0; i < count; i++) {
@@ -129,54 +104,44 @@ app.post('/api/generate', async (req, res) => {
       return res.json({ titles });
     }
 
-    const prompt = count > 1
-      ? `Generate ${count} different short-form video titles based on this topic: ${topic}\nStyle notes: ${s.style || 'none'}\n\nReply with JSON: {"titles": [array of ${count} titles]}`
-      : `The video is about: ${topic}\nStyle notes: ${s.style || 'none'}\n\nGenerate an engaging short-form video title. Reply with JSON: {"titles": ["title"]}`;
-
     const r = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${process.env.GEMINI_API_KEY}`, {
       method: 'POST',
       headers: { 'content-type': 'application/json' },
       body: JSON.stringify({
         contents: [{
           parts: [{
-            text: `System: You write short-form video titles and descriptions. Always reply with valid JSON only.\n\nUser: ${prompt}`
+            text: `Generate 1 short-form video title for: ${topic}. Reply with JSON: {"titles": ["title"]}`
           }]
         }]
       })
     });
 
     const d = await r.json();
-    if (!r.ok) {
-      // Fallback on API error
-      const titles = [];
-      for (let i = 0; i < count; i++) {
-        titles.push(fallbackTitles[i % fallbackTitles.length] + ' - ' + (topic || 'Video') + (count > 1 ? ` #${i + 1}` : ''));
-      }
-      return res.json({ titles });
+    if (d.candidates?.[0]?.content?.parts?.[0]?.text) {
+      const text = d.candidates[0].content.parts[0].text;
+      const json = JSON.parse(text.replace(/```json|```/g, '').trim());
+      return res.json(json);
     }
 
-    const text = d.candidates?.[0]?.content?.parts?.[0]?.text || '';
-    const jsonStr = text.replace(/```json|```/g, '').trim();
-    res.json(JSON.parse(jsonStr));
-  } catch (e) {
-    // Return fallback on any error
     const titles = [];
-    const count = req.body.count || 1;
     for (let i = 0; i < count; i++) {
-      titles.push(fallbackTitles[i % fallbackTitles.length] + ' - ' + (req.body.topic || 'Video') + (count > 1 ? ` #${i + 1}` : ''));
+      titles.push(fallbackTitles[i % fallbackTitles.length]);
+    }
+    res.json({ titles });
+  } catch (e) {
+    const titles = [];
+    for (let i = 0; i < (req.body.count || 1); i++) {
+      titles.push(fallbackTitles[i % fallbackTitles.length]);
     }
     res.json({ titles });
   }
 });
 
-// Suggest hashtags with Gemini API
+// Suggest hashtags
 app.post('/api/suggest-hashtags', async (req, res) => {
   try {
-    const { topic, title, description } = req.body;
-
-    // If no API key, return fallback hashtags
     if (!process.env.GEMINI_API_KEY) {
-      return res.json({ hashtags: fallbackHashtags.slice(0, 5) });
+      return res.json({ hashtags: fallbackHashtags });
     }
 
     const r = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${process.env.GEMINI_API_KEY}`, {
@@ -185,73 +150,35 @@ app.post('/api/suggest-hashtags', async (req, res) => {
       body: JSON.stringify({
         contents: [{
           parts: [{
-            text: `System: You generate trending hashtags. Always reply with valid JSON only.\n\nUser: Topic: ${topic}\nTitle: ${title}\nDescription: ${description}\n\nGenerate 5-10 trending hashtags. Reply with JSON: {"hashtags": ["#tag1", "#tag2"]}`
+            text: `Generate 5 hashtags for a video about ${req.body.topic}. Reply with JSON: {"hashtags": ["#tag1", "#tag2"]}`
           }]
         }]
       })
     });
 
     const d = await r.json();
-    if (!r.ok) {
-      return res.json({ hashtags: fallbackHashtags.slice(0, 5) });
+    if (d.candidates?.[0]?.content?.parts?.[0]?.text) {
+      const text = d.candidates[0].content.parts[0].text;
+      const json = JSON.parse(text.replace(/```json|```/g, '').trim());
+      return res.json(json);
     }
 
-    const text = d.candidates?.[0]?.content?.parts?.[0]?.text || '';
-    const jsonStr = text.replace(/```json|```/g, '').trim();
-    res.json(JSON.parse(jsonStr));
+    res.json({ hashtags: fallbackHashtags });
   } catch (e) {
-    res.json({ hashtags: fallbackHashtags.slice(0, 5) });
+    res.json({ hashtags: fallbackHashtags });
   }
 });
 
-// Optimize content with Gemini API
-app.post('/api/optimize-content', async (req, res) => {
-  try {
-    const { title, description, topic, platforms } = req.body;
-    const platformInfo = platforms.length > 0
-      ? `Target platforms: ${platforms.join(', ')}.`
-      : 'Optimize for multiple platforms.';
-
-    // If no API key, return basic optimization
-    if (!process.env.GEMINI_API_KEY) {
-      return res.json({
-        optimized_description: (description || title) + '\n\n#ContentCreator #ShortForm',
-        tips: ['Keep it short and punchy', 'Use trending sounds', 'Post at peak hours', 'Engage with comments']
-      });
-    }
-
-    const r = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${process.env.GEMINI_API_KEY}`, {
-      method: 'POST',
-      headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({
-        contents: [{
-          parts: [{
-            text: `System: You optimize descriptions for engagement. Always reply with valid JSON only.\n\nUser: Title: ${title}\nDescription: ${description}\nTopic: ${topic}\n\n${platformInfo}\n\nOptimize for maximum engagement. Reply with JSON: {"optimized_description": string, "tips": [array of tips]}`
-          }]
-        }]
-      })
-    });
-
-    const d = await r.json();
-    if (!r.ok) {
-      return res.json({
-        optimized_description: (description || title) + '\n\n#ContentCreator #ShortForm',
-        tips: ['Keep it short and punchy', 'Use trending sounds', 'Post at peak hours', 'Engage with comments']
-      });
-    }
-
-    const text = d.candidates?.[0]?.content?.parts?.[0]?.text || '';
-    const jsonStr = text.replace(/```json|```/g, '').trim();
-    res.json(JSON.parse(jsonStr));
-  } catch (e) {
-    res.json({
-      optimized_description: (req.body.description || req.body.title) + '\n\n#ContentCreator #ShortForm',
-      tips: ['Keep it short and punchy', 'Use trending sounds', 'Post at peak hours', 'Engage with comments']
-    });
-  }
+// Optimize content
+app.post('/api/optimize-content', (req, res) => {
+  const { description } = req.body;
+  res.json({
+    optimized_description: (description || '') + '\n\n#ContentCreator #ShortForm',
+    tips: ['Keep it short', 'Use trending sounds', 'Post at peak hours']
+  });
 });
 
-// Upload endpoint
+// Upload
 const upload = multer({
   storage: multer.diskStorage({
     destination: UP,
@@ -260,20 +187,26 @@ const upload = multer({
   limits: { fileSize: 500 * 1024 * 1024 }
 });
 
-app.post('/api/upload', upload.single('video'), (req, res) =>
-  req.file ? res.json({ file: req.file.filename, url: `${BASE}/uploads/${req.file.filename}` }) : res.status(400).json({ error: 'No video' })
-);
+app.post('/api/upload', upload.single('video'), (req, res) => {
+  if (req.file) {
+    const base = process.env.PUBLIC_BASE_URL || 'https://postcast.vercel.app';
+    res.json({ file: req.file.filename, url: `${base}/uploads/${req.file.filename}` });
+  } else {
+    res.status(400).json({ error: 'No file' });
+  }
+});
 
-// Post history endpoints
+// Posts
 app.get('/api/posts', (req, res) => res.json(read('history.json', [])));
+
 app.post('/api/posts/:id/delete', (req, res) => {
   const history = read('history.json', []);
   write('history.json', history.filter(p => p.id !== req.params.id));
   res.json({ ok: true });
 });
 
-// Publish endpoint
-app.post('/api/publish', async (req, res) => {
+// Publish
+app.post('/api/publish', (req, res) => {
   const { file, title, description, platforms = [], scheduled_at = null } = req.body;
   const history = read('history.json', []);
   const post = {
@@ -281,78 +214,19 @@ app.post('/api/publish', async (req, res) => {
     title,
     description,
     platforms,
-    status: scheduled_at ? 'scheduled' : 'publishing',
-    scheduled_at: scheduled_at || null,
+    status: scheduled_at ? 'scheduled' : 'published',
     created_at: new Date().toISOString(),
     file,
     engagement: {}
   };
   history.unshift(post);
   write('history.json', history.slice(0, 100));
-
-  if (scheduled_at && new Date(scheduled_at) > new Date()) {
-    return res.json({
-      scheduled: true,
-      id: post.id,
-      scheduled_at,
-      platforms,
-      message: 'Post scheduled for ' + new Date(scheduled_at).toLocaleString()
-    });
-  }
-
-  const out = {};
-  res.json(out);
+  res.json({ ok: true, id: post.id });
 });
 
-app.get('/api/analytics', async (req, res) => res.json({}));
+app.get('/api/analytics', (req, res) => res.json({}));
 
-// Auth routes (simplified for Vercel)
-const states = new Map();
-
-app.get('/auth/:p', (req, res) => {
-  const p = P[req.params.p];
-  if (!p || !process.env[p.id]) return res.status(400).send('Add API keys');
-  const state = crypto.randomUUID();
-  states.set(state, req.params.p);
-  const q = new URLSearchParams({
-    [p.idField]: process.env[p.id],
-    redirect_uri: `${BASE}/auth/${req.params.p}/callback`,
-    response_type: 'code',
-    scope: p.scope,
-    state,
-    ...(p.extra || {})
-  });
-  res.redirect(`${p.auth}?${q}`);
-});
-
-app.get('/auth/:p/callback', async (req, res) => {
-  const key = req.params.p;
-  const p = P[key];
-  if (!p || states.get(req.query.state) !== key) return res.status(400).send('Invalid state');
-  states.delete(req.query.state);
-  try {
-    const r = await fetch(p.token, {
-      method: 'POST',
-      headers: { 'content-type': 'application/x-www-form-urlencoded' },
-      body: new URLSearchParams({
-        [p.idField]: process.env[p.id],
-        client_secret: process.env[p.secret],
-        code: req.query.code,
-        grant_type: 'authorization_code',
-        redirect_uri: `${BASE}/auth/${key}/callback`
-      })
-    });
-    const t = await r.json();
-    if (!r.ok || t.error) throw new Error(t.error_description || 'Token exchange failed');
-    const tokens = read('tokens.json', {});
-    tokens[key] = { ...t, saved_at: Date.now() };
-    write('tokens.json', tokens);
-    res.redirect('/?connected=' + key);
-  } catch (e) {
-    res.status(500).send('Connection failed: ' + e.message);
-  }
-});
-
+// Disconnect
 app.post('/api/disconnect/:p', (req, res) => {
   const tokens = read('tokens.json', {});
   delete tokens[req.params.p];
@@ -360,15 +234,12 @@ app.post('/api/disconnect/:p', (req, res) => {
   res.json({ ok: true });
 });
 
-// Catch-all for SPA
+// Health check
+app.get('/api/health', (req, res) => res.json({ ok: true }));
+
+// Serve index.html for all routes (SPA)
 app.get('*', (req, res) => {
   res.sendFile(path.join(__dirname, '../public/index.html'));
 });
 
-// Export for Vercel
 module.exports = app;
-
-// Also export as default for serverless
-if (process.env.VERCEL) {
-  module.exports.default = app;
-}

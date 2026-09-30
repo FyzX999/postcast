@@ -9,93 +9,156 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script src="/auth.js"></script>
 <style>
-/* Base theme system */
+/* Base theme system - Refined, sophisticated palette */
 :root{
-  --bg:#f8fafc;--card:#fff;--ink:#0f172a;--muted:#64748b;--line:#e2e8f0;
-  --accent:#3b82f6;--accent-dark:#2563eb;--accent-light:#93c5fd;
-  --ok:#10b981;--warning:#f59e0b;--bad:#ef4444;--surface:#f1f5f9;
-  --shadow:0 4px 6px rgba(0,0,0,0.07),0 10px 13px rgba(0,0,0,0.05);
-  --shadow-lg:0 10px 15px rgba(0,0,0,0.1),0 4px 6px rgba(0,0,0,0.05);
+  --bg:#fafbfc;--card:#ffffff;--ink:#1a202c;--muted:#718096;--line:#e2e8f0;
+  --accent:#4c6ef5;--accent-dark:#3b5bdb;--accent-light:#748ffc;
+  --ok:#37b679;--warning:#d97706;--bad:#dc2626;--surface:#f7fafc;
+  --shadow:0 4px 6px rgba(0,0,0,0.04),0 10px 15px rgba(0,0,0,0.03);
+  --shadow-lg:0 10px 20px rgba(0,0,0,0.08),0 6px 10px rgba(0,0,0,0.05);
+  --shadow-xl:0 20px 25px rgba(0,0,0,0.12),0 10px 15px rgba(0,0,0,0.08);
+  --notif-glass:rgba(255,255,255,0.85);
+  --notif-border:rgba(226,232,240,0.6);
+  --notif-glow-success:rgba(55,182,121,0.15);
+  --notif-glow-error:rgba(220,38,38,0.15);
+  --notif-glow-info:rgba(76,110,245,0.15);
+  --notif-glow-warning:rgba(217,119,6,0.15);
   color-scheme:light;
 }
 
-/* Dark Theme */
+/* Dark Theme - Deep slate with warm undertones */
 :root[data-theme="dark"],:root[data-theme="auto"][data-system="dark"]{
-  --bg:#0f172a;--card:#1e293b;--ink:#f1f5f9;--muted:#94a3b8;--line:#334155;
-  --accent:#60a5fa;--accent-dark:#3b82f6;--accent-light:#93c5fd;
-  --ok:#34d399;--warning:#fbbf24;--bad:#f87171;--surface:#1e293b;
-  --shadow:0 4px 6px rgba(0,0,0,0.3),0 10px 13px rgba(0,0,0,0.2);
-  --shadow-lg:0 10px 15px rgba(0,0,0,0.4),0 4px 6px rgba(0,0,0,0.2);
+  --bg:#0f1419;--card:#1a1f29;--ink:#e2e8f0;--muted:#94a3b8;--line:#2d3748;
+  --accent:#5b7ff8;--accent-dark:#4c6ef5;--accent-light:#748ffc;
+  --ok:#4ade80;--warning:#f59e0b;--bad:#f87171;--surface:#151a23;
+  --shadow:0 4px 6px rgba(0,0,0,0.25),0 10px 15px rgba(0,0,0,0.2);
+  --shadow-lg:0 10px 20px rgba(0,0,0,0.35),0 6px 10px rgba(0,0,0,0.25);
+  --shadow-xl:0 20px 25px rgba(0,0,0,0.45),0 10px 15px rgba(0,0,0,0.35);
+  --notif-glass:rgba(26,31,41,0.85);
+  --notif-border:rgba(45,55,72,0.6);
+  --notif-glow-success:rgba(74,222,128,0.15);
+  --notif-glow-error:rgba(248,113,113,0.15);
+  --notif-glow-info:rgba(91,127,248,0.15);
+  --notif-glow-warning:rgba(245,158,11,0.15);
   color-scheme:dark;
 }
 
-/* Midnight Theme */
+/* Midnight Theme - Pure black OLED with refined accents */
 :root[data-theme="midnight"]{
-  --bg:#000000;--card:#111111;--ink:#ffffff;--muted:#888888;--line:#222222;
-  --accent:#00d9ff;--accent-dark:#00b8d4;--accent-light:#4dffff;
-  --ok:#00ff88;--warning:#ffaa00;--bad:#ff3366;--surface:#0a0a0a;
-  --shadow:0 4px 6px rgba(0,0,0,0.5),0 10px 13px rgba(0,0,0,0.4);
-  --shadow-lg:0 10px 15px rgba(0,0,0,0.7),0 4px 6px rgba(0,0,0,0.5);
+  --bg:#000000;--card:#0a0a0a;--ink:#f0f0f0;--muted:#888888;--line:#1a1a1a;
+  --accent:#22d3ee;--accent-dark:#06b6d4;--accent-light:#67e8f9;
+  --ok:#34d399;--warning:#fb923c;--bad:#f87171;--surface:#050505;
+  --shadow:0 4px 6px rgba(0,0,0,0.6),0 10px 15px rgba(0,0,0,0.5);
+  --shadow-lg:0 10px 20px rgba(0,0,0,0.7),0 6px 10px rgba(0,0,0,0.6);
+  --shadow-xl:0 20px 25px rgba(0,0,0,0.8),0 10px 15px rgba(0,0,0,0.7);
+  --notif-glass:rgba(10,10,10,0.9);
+  --notif-border:rgba(26,26,26,0.6);
+  --notif-glow-success:rgba(52,211,153,0.2);
+  --notif-glow-error:rgba(248,113,113,0.2);
+  --notif-glow-info:rgba(34,211,238,0.2);
+  --notif-glow-warning:rgba(251,146,60,0.2);
   color-scheme:dark;
 }
 
-/* Sunset Theme */
+/* Sunset Theme - Warm terracotta tones */
 :root[data-theme="sunset"]{
-  --bg:#fff5f0;--card:#ffffff;--ink:#1a1a1a;--muted:#8b5a3c;--line:#ffe4d9;
-  --accent:#ff6b35;--accent-dark:#e55a2b;--accent-light:#ff8c5f;
-  --ok:#28a745;--warning:#ffc107;--bad:#dc3545;--surface:#fff9f7;
-  --shadow:0 4px 6px rgba(255,107,53,0.1),0 10px 13px rgba(255,107,53,0.05);
-  --shadow-lg:0 10px 15px rgba(255,107,53,0.15),0 4px 6px rgba(255,107,53,0.1);
+  --bg:#fef8f5;--card:#ffffff;--ink:#292524;--muted:#78716c;--line:#f5e6db;
+  --accent:#d97706;--accent-dark:#b45309;--accent-light:#f59e0b;
+  --ok:#059669;--warning:#dc2626;--bad:#be123c;--surface:#fefaf7;
+  --shadow:0 4px 6px rgba(217,119,6,0.08),0 10px 15px rgba(217,119,6,0.04);
+  --shadow-lg:0 10px 20px rgba(217,119,6,0.12),0 6px 10px rgba(217,119,6,0.08);
+  --shadow-xl:0 20px 25px rgba(217,119,6,0.16),0 10px 15px rgba(217,119,6,0.12);
+  --notif-glass:rgba(255,255,255,0.85);
+  --notif-border:rgba(245,230,219,0.6);
+  --notif-glow-success:rgba(5,150,105,0.15);
+  --notif-glow-error:rgba(190,18,60,0.15);
+  --notif-glow-info:rgba(217,119,6,0.15);
+  --notif-glow-warning:rgba(220,38,38,0.15);
   color-scheme:light;
 }
 
-/* Forest Theme */
+/* Forest Theme - Muted sage & moss */
 :root[data-theme="forest"]{
-  --bg:#f0f7f4;--card:#ffffff;--ink:#1e3a2e;--muted:#5a7a6a;--line:#d4e8de;
-  --accent:#2d6a4f;--accent-dark:#1b4332;--accent-light:#52b788;
-  --ok:#40916c;--warning:#f77f00;--bad:#d62828;--surface:#f5faf7;
-  --shadow:0 4px 6px rgba(45,106,79,0.1),0 10px 13px rgba(45,106,79,0.05);
-  --shadow-lg:0 10px 15px rgba(45,106,79,0.15),0 4px 6px rgba(45,106,79,0.1);
+  --bg:#f5f9f6;--card:#ffffff;--ink:#1e3a2e;--muted:#5a7a6a;--line:#d4e8de;
+  --accent:#2d6a4f;--accent-dark:#1b4332;--accent-light:#40916c;
+  --ok:#059669;--warning:#d97706;--bad:#dc2626;--surface:#fafcfb;
+  --shadow:0 4px 6px rgba(45,106,79,0.08),0 10px 15px rgba(45,106,79,0.04);
+  --shadow-lg:0 10px 20px rgba(45,106,79,0.12),0 6px 10px rgba(45,106,79,0.08);
+  --shadow-xl:0 20px 25px rgba(45,106,79,0.16),0 10px 15px rgba(45,106,79,0.12);
+  --notif-glass:rgba(255,255,255,0.85);
+  --notif-border:rgba(212,232,222,0.6);
+  --notif-glow-success:rgba(5,150,105,0.15);
+  --notif-glow-error:rgba(220,38,38,0.15);
+  --notif-glow-info:rgba(45,106,79,0.15);
+  --notif-glow-warning:rgba(217,119,6,0.15);
   color-scheme:light;
 }
 
-/* Ocean Theme */
+/* Ocean Theme - Cool slate blues */
 :root[data-theme="ocean"]{
-  --bg:#e8f4f8;--card:#ffffff;--ink:#0a2540;--muted:#4a6fa5;--line:#c5e2f0;
-  --accent:#0077cc;--accent-dark:#005fa3;--accent-light:#3399dd;
-  --ok:#06d6a0;--warning:#ffbe0b;--bad:#ef476f;--surface:#f2f8fb;
-  --shadow:0 4px 6px rgba(0,119,204,0.1),0 10px 13px rgba(0,119,204,0.05);
-  --shadow-lg:0 10px 15px rgba(0,119,204,0.15),0 4px 6px rgba(0,119,204,0.1);
+  --bg:#f0f7fc;--card:#ffffff;--ink:#0c3b5c;--muted:#475569;--line:#cbd5e1;
+  --accent:#0284c7;--accent-dark:#0369a1;--accent-light:#0ea5e9;
+  --ok:#059669;--warning:#d97706;--bad:#dc2626;--surface:#f7fbfd;
+  --shadow:0 4px 6px rgba(2,132,199,0.08),0 10px 15px rgba(2,132,199,0.04);
+  --shadow-lg:0 10px 20px rgba(2,132,199,0.12),0 6px 10px rgba(2,132,199,0.08);
+  --shadow-xl:0 20px 25px rgba(2,132,199,0.16),0 10px 15px rgba(2,132,199,0.12);
+  --notif-glass:rgba(255,255,255,0.85);
+  --notif-border:rgba(203,213,225,0.6);
+  --notif-glow-success:rgba(5,150,105,0.15);
+  --notif-glow-error:rgba(220,38,38,0.15);
+  --notif-glow-info:rgba(2,132,199,0.15);
+  --notif-glow-warning:rgba(217,119,6,0.15);
   color-scheme:light;
 }
 
-/* Purple Dream Theme */
+/* Purple Dream Theme - Soft lavender & violet */
 :root[data-theme="purple"]{
-  --bg:#f5f0ff;--card:#ffffff;--ink:#2d1b4e;--muted:#7e6b9f;--line:#e6dcff;
-  --accent:#8b5cf6;--accent-dark:#7c3aed;--accent-light:#a78bfa;
-  --ok:#10b981;--warning:#f59e0b;--bad:#ef4444;--surface:#faf7ff;
-  --shadow:0 4px 6px rgba(139,92,246,0.1),0 10px 13px rgba(139,92,246,0.05);
-  --shadow-lg:0 10px 15px rgba(139,92,246,0.15),0 4px 6px rgba(139,92,246,0.1);
+  --bg:#f8f6fc;--card:#ffffff;--ink:#3b2f5e;--muted:#6b5f8a;--line:#e9e3f7;
+  --accent:#7c3aed;--accent-dark:#6d28d9;--accent-light:#8b5cf6;
+  --ok:#059669;--warning:#d97706;--bad:#dc2626;--surface:#fbfafd;
+  --shadow:0 4px 6px rgba(124,58,237,0.08),0 10px 15px rgba(124,58,237,0.04);
+  --shadow-lg:0 10px 20px rgba(124,58,237,0.12),0 6px 10px rgba(124,58,237,0.08);
+  --shadow-xl:0 20px 25px rgba(124,58,237,0.16),0 10px 15px rgba(124,58,237,0.12);
+  --notif-glass:rgba(255,255,255,0.85);
+  --notif-border:rgba(233,227,247,0.6);
+  --notif-glow-success:rgba(5,150,105,0.15);
+  --notif-glow-error:rgba(220,38,38,0.15);
+  --notif-glow-info:rgba(124,58,237,0.15);
+  --notif-glow-warning:rgba(217,119,6,0.15);
   color-scheme:light;
 }
 
-/* Rose Theme */
+/* Rose Theme - Soft blush & burgundy */
 :root[data-theme="rose"]{
-  --bg:#fff0f5;--card:#ffffff;--ink:#4a1a2c;--muted:#9d5c75;--line:#ffd6e7;
-  --accent:#e11d48;--accent-dark:#be123c;--accent-light:#f43f5e;
-  --ok:#059669;--warning:#ea580c;--bad:#dc2626;--surface:#fff7fa;
-  --shadow:0 4px 6px rgba(225,29,72,0.1),0 10px 13px rgba(225,29,72,0.05);
-  --shadow-lg:0 10px 15px rgba(225,29,72,0.15),0 4px 6px rgba(225,29,72,0.1);
+  --bg:#fef7f9;--card:#ffffff;--ink:#4a1a2c;--muted:#8b5a6f;--line:#f7dce7;
+  --accent:#be123c;--accent-dark:#9f1239;--accent-light:#e11d48;
+  --ok:#059669;--warning:#d97706;--bad:#dc2626;--surface:#fefbfc;
+  --shadow:0 4px 6px rgba(190,18,60,0.08),0 10px 15px rgba(190,18,60,0.04);
+  --shadow-lg:0 10px 20px rgba(190,18,60,0.12),0 6px 10px rgba(190,18,60,0.08);
+  --shadow-xl:0 20px 25px rgba(190,18,60,0.16),0 10px 15px rgba(190,18,60,0.12);
+  --notif-glass:rgba(255,255,255,0.85);
+  --notif-border:rgba(247,220,231,0.6);
+  --notif-glow-success:rgba(5,150,105,0.15);
+  --notif-glow-error:rgba(220,38,38,0.15);
+  --notif-glow-info:rgba(190,18,60,0.15);
+  --notif-glow-warning:rgba(217,119,6,0.15);
   color-scheme:light;
 }
 
 @media(prefers-color-scheme:dark){
   :root[data-theme="auto"]{
-    --bg:#0f172a;--card:#1e293b;--ink:#f1f5f9;--muted:#94a3b8;--line:#334155;
-    --accent:#60a5fa;--accent-dark:#3b82f6;--accent-light:#93c5fd;
-    --ok:#34d399;--warning:#fbbf24;--bad:#f87171;--surface:#1e293b;
-    --shadow:0 4px 6px rgba(0,0,0,0.3),0 10px 13px rgba(0,0,0,0.2);
-    --shadow-lg:0 10px 15px rgba(0,0,0,0.4),0 4px 6px rgba(0,0,0,0.2);
+    --bg:#0f1419;--card:#1a1f29;--ink:#e2e8f0;--muted:#94a3b8;--line:#2d3748;
+    --accent:#5b7ff8;--accent-dark:#4c6ef5;--accent-light:#748ffc;
+    --ok:#4ade80;--warning:#f59e0b;--bad:#f87171;--surface:#151a23;
+    --shadow:0 4px 6px rgba(0,0,0,0.25),0 10px 15px rgba(0,0,0,0.2);
+    --shadow-lg:0 10px 20px rgba(0,0,0,0.35),0 6px 10px rgba(0,0,0,0.25);
+    --shadow-xl:0 20px 25px rgba(0,0,0,0.45),0 10px 15px rgba(0,0,0,0.35);
+    --notif-glass:rgba(26,31,41,0.85);
+    --notif-border:rgba(45,55,72,0.6);
+    --notif-glow-success:rgba(74,222,128,0.15);
+    --notif-glow-error:rgba(248,113,113,0.15);
+    --notif-glow-info:rgba(91,127,248,0.15);
+    --notif-glow-warning:rgba(245,158,11,0.15);
     color-scheme:dark;
   }
 }
@@ -185,20 +248,272 @@ ul{margin:8px 0 0;padding-left:20px}
 .progress-bar .fill{height:100%;background:linear-gradient(90deg,var(--accent),var(--accent-dark));width:0%;transition:width .3s}
 .loading{display:inline-block;width:16px;height:16px;border:2px solid var(--line);border-top-color:var(--accent);border-radius:50%;animation:spin .8s linear infinite}
 @keyframes spin{to{transform:rotate(360deg)}}
-.notification-center{position:fixed;bottom:20px;right:20px;display:flex;flex-direction:column;gap:10px;z-index:2000;max-width:320px}
-.notification{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:14px;box-shadow:var(--shadow-lg);animation:slideIn .3s ease-out;display:flex;align-items:flex-start;gap:12px}
-.notification.success{border-left:4px solid var(--ok);background:rgba(16,185,129,.05)}
-.notification.error{border-left:4px solid var(--bad);background:rgba(239,68,68,.05)}
-.notification.info{border-left:4px solid var(--accent);background:rgba(59,130,246,.05)}
-.notification.warning{border-left:4px solid var(--warning);background:rgba(245,158,11,.05)}
-.notification-icon{font-size:1.2rem;flex-shrink:0;margin-top:2px}
-.notification-content{flex:1;min-width:0}
-.notification-title{font-weight:600;margin:0 0 4px;font-size:.95rem}
-.notification-message{margin:0;font-size:.85rem;color:var(--muted)}
-.notification-close{background:transparent;border:none;color:var(--muted);cursor:pointer;padding:0;font-size:1.2rem;line-height:1}
-.notification-close:hover{color:var(--ink)}
+
+/* Ultra-Polished Notification System */
+.notification-center{
+  position:fixed;
+  bottom:24px;
+  right:24px;
+  display:flex;
+  flex-direction:column;
+  gap:12px;
+  z-index:2000;
+  max-width:380px;
+  pointer-events:none;
+}
+
+.notification{
+  position:relative;
+  background:var(--notif-glass);
+  backdrop-filter:blur(20px) saturate(180%);
+  -webkit-backdrop-filter:blur(20px) saturate(180%);
+  border:1px solid var(--notif-border);
+  border-radius:14px;
+  padding:16px 18px;
+  box-shadow:var(--shadow-xl),0 0 0 1px rgba(0,0,0,0.02);
+  display:flex;
+  align-items:flex-start;
+  gap:14px;
+  pointer-events:auto;
+  animation:notifSlideIn 0.5s cubic-bezier(0.34,1.56,0.64,1);
+  transition:all 0.3s cubic-bezier(0.4,0,0.2,1);
+  overflow:hidden;
+}
+
+.notification::before{
+  content:'';
+  position:absolute;
+  left:0;
+  top:0;
+  bottom:0;
+  width:4px;
+  background:linear-gradient(180deg,var(--notif-accent),var(--notif-accent-dark));
+  box-shadow:0 0 12px var(--notif-glow);
+  border-radius:14px 0 0 14px;
+}
+
+.notification:hover{
+  transform:translateY(-2px) scale(1.01);
+  box-shadow:var(--shadow-xl),0 0 0 1px rgba(0,0,0,0.04),0 0 20px var(--notif-glow);
+}
+
+.notification.success{
+  --notif-accent:var(--ok);
+  --notif-accent-dark:var(--ok);
+  --notif-glow:var(--notif-glow-success);
+}
+
+.notification.error{
+  --notif-accent:var(--bad);
+  --notif-accent-dark:var(--bad);
+  --notif-glow:var(--notif-glow-error);
+}
+
+.notification.info{
+  --notif-accent:var(--accent);
+  --notif-accent-dark:var(--accent-dark);
+  --notif-glow:var(--notif-glow-info);
+}
+
+.notification.warning{
+  --notif-accent:var(--warning);
+  --notif-accent-dark:var(--warning);
+  --notif-glow:var(--notif-glow-warning);
+}
+
+.notification-icon-wrapper{
+  position:relative;
+  flex-shrink:0;
+  width:36px;
+  height:36px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  border-radius:10px;
+  background:linear-gradient(135deg,var(--notif-accent),var(--notif-accent-dark));
+  box-shadow:0 4px 12px var(--notif-glow),inset 0 1px 0 rgba(255,255,255,0.2);
+  animation:notifIconPulse 0.6s cubic-bezier(0.34,1.56,0.64,1);
+}
+
+.notification-icon-wrapper::after{
+  content:'';
+  position:absolute;
+  inset:-4px;
+  border-radius:12px;
+  background:radial-gradient(circle,var(--notif-glow) 0%,transparent 70%);
+  opacity:0;
+  animation:notifRingFlare 0.8s ease-out 0.2s;
+}
+
+.notification-icon{
+  font-size:18px;
+  line-height:1;
+  filter:drop-shadow(0 1px 2px rgba(0,0,0,0.2));
+}
+
+.notification-icon svg{
+  width:18px;
+  height:18px;
+  fill:white;
+  stroke:white;
+  stroke-width:2;
+}
+
+.notification-content{
+  flex:1;
+  min-width:0;
+  padding-top:2px;
+}
+
+.notification-title{
+  font-weight:600;
+  margin:0 0 4px;
+  font-size:14px;
+  line-height:1.4;
+  color:var(--ink);
+  letter-spacing:-0.01em;
+}
+
+.notification-message{
+  margin:0;
+  font-size:13px;
+  line-height:1.5;
+  color:var(--muted);
+  font-weight:400;
+}
+
+.notification-close{
+  position:relative;
+  flex-shrink:0;
+  background:transparent;
+  border:none;
+  width:28px;
+  height:28px;
+  border-radius:8px;
+  cursor:pointer;
+  padding:0;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  transition:all 0.2s cubic-bezier(0.4,0,0.2,1);
+  color:var(--muted);
+  font-size:18px;
+  line-height:1;
+  margin-top:-2px;
+  margin-right:-4px;
+}
+
+.notification-close:hover{
+  background:var(--surface);
+  color:var(--ink);
+  transform:scale(1.1);
+}
+
+.notification-close:active{
+  transform:scale(0.95);
+}
+
+/* Success checkmark animation */
+.notification.success .notification-icon-wrapper::before{
+  content:'✓';
+  position:absolute;
+  color:white;
+  font-size:20px;
+  font-weight:bold;
+  animation:checkmarkDraw 0.4s ease-out 0.1s both;
+}
+
+@keyframes notifSlideIn{
+  from{
+    transform:translateX(420px) scale(0.9);
+    opacity:0;
+  }
+  to{
+    transform:translateX(0) scale(1);
+    opacity:1;
+  }
+}
+
+@keyframes notifSlideOut{
+  from{
+    transform:translateX(0) scale(1);
+    opacity:1;
+  }
+  to{
+    transform:translateX(420px) scale(0.9);
+    opacity:0;
+  }
+}
+
+@keyframes notifIconPulse{
+  0%{
+    transform:scale(0.8);
+    opacity:0;
+  }
+  50%{
+    transform:scale(1.1);
+  }
+  100%{
+    transform:scale(1);
+    opacity:1;
+  }
+}
+
+@keyframes notifRingFlare{
+  0%{
+    opacity:0;
+    transform:scale(0.8);
+  }
+  30%{
+    opacity:0.6;
+  }
+  100%{
+    opacity:0;
+    transform:scale(1.5);
+  }
+}
+
+@keyframes checkmarkDraw{
+  0%{
+    transform:scale(0) rotate(-45deg);
+    opacity:0;
+  }
+  50%{
+    transform:scale(1.2) rotate(0deg);
+  }
+  100%{
+    transform:scale(1) rotate(0deg);
+    opacity:1;
+  }
+}
+
+/* Responsive adjustments */
+@media(max-width:480px){
+  .notification-center{
+    right:16px;
+    left:16px;
+    max-width:none;
+    bottom:16px;
+  }
+  
+  .notification{
+    padding:14px 16px;
+  }
+  
+  .notification-icon-wrapper{
+    width:32px;
+    height:32px;
+  }
+  
+  .notification-icon{
+    font-size:16px;
+  }
+}
+
+/* Old animation classes for backward compatibility */
 @keyframes slideIn{from{transform:translateX(400px);opacity:0}to{transform:translateX(0);opacity:1}}
 @keyframes slideOut{from{transform:translateX(0);opacity:1}to{transform:translateX(400px);opacity:0}}
+
 .tabs{display:flex;gap:4px;margin-bottom:16px;border-bottom:1px solid var(--line)}
 .tab{padding:12px 16px;background:transparent;border:none;border-bottom:2px solid transparent;cursor:pointer;font-weight:600;transition:all .2s;color:var(--muted)}
 .tab:hover{color:var(--ink)}
@@ -656,17 +971,17 @@ ul{margin:8px 0 0;padding-left:20px}
       <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;margin-top:16px">
         <div>
           <div class="theme-preview" data-theme="auto">
-            <div class="theme-preview-color" style="background:#3b82f6"></div>
-            <div class="theme-preview-color" style="background:#60a5fa"></div>
-            <div class="theme-preview-color" style="background:#93c5fd"></div>
+            <div class="theme-preview-color" style="background:#4c6ef5"></div>
+            <div class="theme-preview-color" style="background:#5b7ff8"></div>
+            <div class="theme-preview-color" style="background:#748ffc"></div>
           </div>
           <p style="text-align:center;margin-top:8px;font-weight:600;font-size:.9rem">Auto</p>
         </div>
         
         <div>
           <div class="theme-preview" data-theme="light">
-            <div class="theme-preview-color" style="background:#f8fafc"></div>
-            <div class="theme-preview-color" style="background:#3b82f6"></div>
+            <div class="theme-preview-color" style="background:#fafbfc"></div>
+            <div class="theme-preview-color" style="background:#4c6ef5"></div>
             <div class="theme-preview-color" style="background:#e2e8f0"></div>
           </div>
           <p style="text-align:center;margin-top:8px;font-weight:600;font-size:.9rem">Light</p>
@@ -674,9 +989,9 @@ ul{margin:8px 0 0;padding-left:20px}
         
         <div>
           <div class="theme-preview" data-theme="dark">
-            <div class="theme-preview-color" style="background:#0f172a"></div>
-            <div class="theme-preview-color" style="background:#60a5fa"></div>
-            <div class="theme-preview-color" style="background:#334155"></div>
+            <div class="theme-preview-color" style="background:#0f1419"></div>
+            <div class="theme-preview-color" style="background:#5b7ff8"></div>
+            <div class="theme-preview-color" style="background:#2d3748"></div>
           </div>
           <p style="text-align:center;margin-top:8px;font-weight:600;font-size:.9rem">Dark</p>
         </div>
@@ -684,24 +999,24 @@ ul{margin:8px 0 0;padding-left:20px}
         <div>
           <div class="theme-preview" data-theme="midnight">
             <div class="theme-preview-color" style="background:#000000"></div>
-            <div class="theme-preview-color" style="background:#00d9ff"></div>
-            <div class="theme-preview-color" style="background:#222222"></div>
+            <div class="theme-preview-color" style="background:#22d3ee"></div>
+            <div class="theme-preview-color" style="background:#1a1a1a"></div>
           </div>
           <p style="text-align:center;margin-top:8px;font-weight:600;font-size:.9rem">Midnight</p>
         </div>
         
         <div>
           <div class="theme-preview" data-theme="sunset">
-            <div class="theme-preview-color" style="background:#fff5f0"></div>
-            <div class="theme-preview-color" style="background:#ff6b35"></div>
-            <div class="theme-preview-color" style="background:#ffe4d9"></div>
+            <div class="theme-preview-color" style="background:#fef8f5"></div>
+            <div class="theme-preview-color" style="background:#d97706"></div>
+            <div class="theme-preview-color" style="background:#f5e6db"></div>
           </div>
           <p style="text-align:center;margin-top:8px;font-weight:600;font-size:.9rem">Sunset</p>
         </div>
         
         <div>
           <div class="theme-preview" data-theme="forest">
-            <div class="theme-preview-color" style="background:#f0f7f4"></div>
+            <div class="theme-preview-color" style="background:#f5f9f6"></div>
             <div class="theme-preview-color" style="background:#2d6a4f"></div>
             <div class="theme-preview-color" style="background:#d4e8de"></div>
           </div>
@@ -710,27 +1025,27 @@ ul{margin:8px 0 0;padding-left:20px}
         
         <div>
           <div class="theme-preview" data-theme="ocean">
-            <div class="theme-preview-color" style="background:#e8f4f8"></div>
-            <div class="theme-preview-color" style="background:#0077cc"></div>
-            <div class="theme-preview-color" style="background:#c5e2f0"></div>
+            <div class="theme-preview-color" style="background:#f0f7fc"></div>
+            <div class="theme-preview-color" style="background:#0284c7"></div>
+            <div class="theme-preview-color" style="background:#cbd5e1"></div>
           </div>
           <p style="text-align:center;margin-top:8px;font-weight:600;font-size:.9rem">Ocean</p>
         </div>
         
         <div>
           <div class="theme-preview" data-theme="purple">
-            <div class="theme-preview-color" style="background:#f5f0ff"></div>
-            <div class="theme-preview-color" style="background:#8b5cf6"></div>
-            <div class="theme-preview-color" style="background:#e6dcff"></div>
+            <div class="theme-preview-color" style="background:#f8f6fc"></div>
+            <div class="theme-preview-color" style="background:#7c3aed"></div>
+            <div class="theme-preview-color" style="background:#e9e3f7"></div>
           </div>
           <p style="text-align:center;margin-top:8px;font-weight:600;font-size:.9rem">Purple</p>
         </div>
         
         <div>
           <div class="theme-preview" data-theme="rose">
-            <div class="theme-preview-color" style="background:#fff0f5"></div>
-            <div class="theme-preview-color" style="background:#e11d48"></div>
-            <div class="theme-preview-color" style="background:#ffd6e7"></div>
+            <div class="theme-preview-color" style="background:#fef7f9"></div>
+            <div class="theme-preview-color" style="background:#be123c"></div>
+            <div class="theme-preview-color" style="background:#f7dce7"></div>
           </div>
           <p style="text-align:center;margin-top:8px;font-weight:600;font-size:.9rem">Rose</p>
         </div>
@@ -838,15 +1153,23 @@ class NotificationCenter {
     el.className = 'notification ' + notification.type;
     el.id = 'notif-' + notification.id;
     
-    const icons = { success: '✅', error: '❌', info: 'ℹ️', warning: '⚠️' };
+    // Sophisticated icon system with SVG for better quality
+    const iconSvgs = {
+      success: '<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M20 6L9 17L4 12" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+      error: '<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M18 6L6 18M6 6L18 18" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+      info: '<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M12 16V12M12 8H12.01M22 12C22 17.5228 17.5228 22 12 22C6.47715 22 2 17.5228 2 12C2 6.47715 6.47715 2 12 2C17.5228 2 22 6.47715 22 12Z" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+      warning: '<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M12 9V13M12 17H12.01M10.29 3.86L1.82 18C1.64537 18.3024 1.55296 18.6453 1.55199 18.9945C1.55101 19.3437 1.64151 19.6871 1.81445 19.9905C1.98738 20.2939 2.23673 20.5467 2.53771 20.7239C2.83868 20.9012 3.18082 20.9962 3.53 21H20.47C20.8192 20.9962 21.1613 20.9012 21.4623 20.7239C21.7633 20.5467 22.0126 20.2939 22.1856 19.9905C22.3585 19.6871 22.449 19.3437 22.448 18.9945C22.447 18.6453 22.3546 18.3024 22.18 18L13.71 3.86C13.5317 3.56611 13.2807 3.32312 12.9812 3.15448C12.6817 2.98585 12.3437 2.89725 12 2.89725C11.6563 2.89725 11.3183 2.98585 11.0188 3.15448C10.7193 3.32312 10.4683 3.56611 10.29 3.86Z" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>'
+    };
     
     el.innerHTML = `
-      <div class="notification-icon">${icons[notification.type] || 'ℹ️'}</div>
+      <div class="notification-icon-wrapper">
+        <div class="notification-icon">${iconSvgs[notification.type] || iconSvgs.info}</div>
+      </div>
       <div class="notification-content">
         ${notification.title ? `<p class="notification-title">${esc(notification.title)}</p>` : ''}
         <p class="notification-message">${esc(notification.message)}</p>
       </div>
-      <button class="notification-close" onclick="notifications.remove(${notification.id})">×</button>
+      <button class="notification-close" onclick="notifications.remove(${notification.id})" aria-label="Close notification">×</button>
     `;
     
     center.appendChild(el);
@@ -855,7 +1178,7 @@ class NotificationCenter {
   remove(id) {
     const el = $('notif-' + id);
     if (el) {
-      el.style.animation = 'slideOut .3s ease-out';
+      el.style.animation = 'notifSlideOut 0.3s cubic-bezier(0.4,0,1,1)';
       setTimeout(() => el.remove(), 300);
     }
     this.notifications = this.notifications.filter(n => n.id !== id);
